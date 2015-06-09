@@ -7,7 +7,11 @@
     ScratchExtensions.loadExternalJS("scratch_extensions/libs/lodash.js");
     ScratchExtensions.loadExternalJS("scratch_extensions/libs/socket.io.js");*/
    // ScratchExtensions.loadExternalJS("scratch_extensions/dist/Tuio.js");
-    var client = new Tuio.Client({
+
+    ext.tuioObjects = [];
+    ext.currentObject = null;
+    ext.update = false;
+    ext.client = new Tuio.Client({
             host: "http://localhost:5000"
         }),
 
@@ -24,17 +28,21 @@
         },
 
         onAddTuioObject = function(addObject) {
+            ext.tuioObjects[addObject.sessionId] = addObject;
             console.log("added "+addObject.symbolId);
         },
 
         onUpdateTuioObject = function(updateObject) {
-
+            ext.tuioObjects[updateObject.sessionId] = updateObject;
             console.log("update on object: "+ updateObject.symbolId);
+            ext.update = true;
+            ext.currentObject = updateObject;
             console.log("with positions: "+ updateObject.xPos + ","+ updateObject.yPos);
 
         },
 
         onRemoveTuioObject = function(removeObject) {
+            ext.tuioObjects[removeObject.sessionId] = null;
             console.log(removeObject);
         },
 
@@ -42,18 +50,18 @@
             console.log(time);
         };
 
-    client.on("addTuioCursor", onAddTuioCursor);
-    client.on("updateTuioCursor", onUpdateTuioCursor);
-    client.on("removeTuioCursor", onRemoveTuioCursor);
-    client.on("addTuioObject", onAddTuioObject);
-    client.on("updateTuioObject", onUpdateTuioObject);
-    client.on("removeTuioObject", onRemoveTuioObject);
-    client.on("refresh", onRefresh);
-    client.connect();
+    ext.client.on("addTuioCursor", onAddTuioCursor);
+    ext.client.on("updateTuioCursor", onUpdateTuioCursor);
+    ext.client.on("removeTuioCursor", onRemoveTuioCursor);
+    ext.client.on("addTuioObject", onAddTuioObject);
+    ext.client.on("updateTuioObject", onUpdateTuioObject);
+    ext.client.on("removeTuioObject", onRemoveTuioObject);
+    ext.client.on("refresh", onRefresh);
+    ext.client.connect();
 
 
     ext.alert = function(message) {
-        alert(message + c_browserExtension);
+        alert(message );
     };
 
     ext.confirm = function(question) {
@@ -73,6 +81,7 @@
     };
 
     ext._shutdown = function() {
+
         console.log('Shutting down...');
     };
 
@@ -80,8 +89,25 @@
         return {status: 2, msg: 'Ready'};
     };
 
+    ext.hatBlockObjectID = function (id){
+        //console.log("update: "+ext.update+", "+ )
+        if(ext.update == true && ext.currentObject !=null)
+        {
+            if(ext.currentObject.symbolId ==id)
+            {
+                ext.currentObject = null;
+                ext.update =false;
+                return true;
+            }
+            else
+                return false;
+        }
+        else
+            return false;
+    };
     var descriptor = {
         blocks: [
+            ['h','update on object %n','hatBlockObjectID','-1'],
             [' ', 'alert %s', 'alert', ''],
             ['b', 'confirm %s', 'confirm', 'Are you sure?'],
             ['r', 'ask %s', 'ask', 'How are you?'],
