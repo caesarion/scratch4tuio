@@ -1,19 +1,23 @@
 // Scratch Extension to demonstrate some simple web browser functionality
 // 2014 Shane M. Clements
 
-(function(ext) {
-/*    ScratchExtensions.loadExternalJS("scratch_extensions/browser_extension.js");
-    ScratchExtensions.loadExternalJS("scratch_extensions/libs/jquery-1.7.2.js");
-    ScratchExtensions.loadExternalJS("scratch_extensions/libs/lodash.js");
-    ScratchExtensions.loadExternalJS("scratch_extensions/libs/socket.io.js");*/
-   // ScratchExtensions.loadExternalJS("scratch_extensions/dist/Tuio.js");
 
+
+
+(function(ext) {
+    /* window.ScratchExtensions.loadExternalJS('scratch_extensions/libs/lodash.js');
+     window.ScratchExtensions.loadExternalJS('scratch_extensions/libs/socket.io.js');
+     window.ScratchExtensions.loadExternalJS('scratch_extensions/dist/Tuio.js');*/
+
+    // initialize tuio client
     ext.tuioObjects = [];
+
     ext.currentObject = null;
-    ext.update = false;
+    ext.update = [];
+
     ext.client = new Tuio.Client({
-            host: "http://localhost:5000"
-        }),
+        host: "http://localhost:5000"
+    }),
 
         onAddTuioCursor = function(addCursor) {
             console.log(addCursor);
@@ -21,6 +25,7 @@
 
         onUpdateTuioCursor = function(updateCursor) {
             console.log(updateCursor);
+
         },
 
         onRemoveTuioCursor = function(removeCursor) {
@@ -35,7 +40,7 @@
         onUpdateTuioObject = function(updateObject) {
             ext.tuioObjects[updateObject.sessionId] = updateObject;
             console.log("update on object: "+ updateObject.symbolId);
-            ext.update = true;
+            ext.update[updateObject.symbolId] = true;
             ext.currentObject = updateObject;
             console.log("with positions: "+ updateObject.xPos + ","+ updateObject.yPos);
 
@@ -59,27 +64,51 @@
     ext.client.on("refresh", onRefresh);
     ext.client.connect();
 
+    // define block behavior
 
-    ext.alert = function(message) {
-        alert(message );
-    };
-
-    ext.confirm = function(question) {
-        return confirm(question);
-    };
-
-    ext.ask = function(question) {
-        return prompt(question);
-    };
 
     ext.setTitle = function(title) {
         window.document.title = title;
     };
 
-    ext.openTab = function(location) {
-        window.open(location, '_blank');
-    };
+    ext.updateHatBlock = function (id){
+        //console.log("update: "+ext.update+", "+ )
 
+
+        // check if id is correct
+        if(!((id == -1 || (id > 0 && id <88)) &&(!isNaN(id) && (function(x) { return (x | 0) === x; })(parseFloat(id)))) )
+        {
+            alert(id +" is not an valid id!" );
+            return false;
+        }
+        if(ext.update[id] == true )
+        {
+            if(ext.currentObject !=null){
+                if(id == -1 ) {
+                    console.error("update on object but no object set!!");
+                    return false;
+                }
+                if(ext.currentObject.symbolId ==id)
+                {
+                    ext.currentObject = null;
+                    ext.update[id] =false;
+                    return true;
+                }
+                else
+                    return false;
+            }
+            else{
+                if(id != -1 ) {
+                    console.error("cursor update must have id = -1!");
+                    return false;
+                }
+                ext.update[id] =false;
+                return true;
+            }
+        }
+        else
+            return false;
+    };
     ext._shutdown = function() {
 
         console.log('Shutting down...');
@@ -88,34 +117,21 @@
     ext._getStatus = function() {
         return {status: 2, msg: 'Ready'};
     };
-
-    ext.hatBlockObjectID = function (id){
-        //console.log("update: "+ext.update+", "+ )
-        if(ext.update == true && ext.currentObject !=null)
-        {
-            if(ext.currentObject.symbolId ==id)
-            {
-                ext.currentObject = null;
-                ext.update =false;
-                return true;
-            }
-            else
-                return false;
-        }
-        else
-            return false;
-    };
+    ext.tuioObject = function(id){
+        return id;
+    }
+    ext.tuioCursor = function() {
+        return -1;
+    }
     var descriptor = {
         blocks: [
-            ['h','update on object %n','hatBlockObjectID','-1'],
-            [' ', 'alert %s', 'alert', ''],
-            ['b', 'confirm %s', 'confirm', 'Are you sure?'],
-            ['r', 'ask %s', 'ask', 'How are you?'],
-            [' ', 'set window title to %s', 'setTitle', 'title'],
-            [' ', 'open tab with %s', 'openTab', 'https://twitter.com/scratchteam']
+            ['h','update on %n','updateHatBlock',''],
+            ['r','TuioObject with ID %n','tuioObject','1'],
+            // ['b', 'Stringblock','rotz',''],
+            ['r','TuioCursor', 'tuioCursor', '']
         ]
     };
 
-    ScratchExtensions.register('Browser Stuff', descriptor, ext);
+    ScratchExtensions.register('TuioExtension', descriptor, ext);
 })({});
 
