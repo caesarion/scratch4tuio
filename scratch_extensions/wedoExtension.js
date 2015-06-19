@@ -153,8 +153,18 @@
         return ext.cursorID;
     };
 
-    ext.getTuioAttribute = function(id){
+    ext.getTuioAttribute = function(attributeName,id){
 
+        var current = ext.tuioObjects[id];
+        if(typeof current !='undefined' && current !=null){
+            switch(attributeName) {
+                case 'Position X': return current.getX() ; break;
+                case 'Position Y': return current.getY(); break;
+                case 'Speed': return current.getMotionSpeed(); break;
+            }
+        }
+        else
+            return 'ERROR: No object with '+ id + " on camera!";
     };
     var descriptor = {
         blocks: [
@@ -163,7 +173,7 @@
             ['h','%n removed','removeEventHatBlock',''],
             ['r','Tuio-Object with ID %n','tuioObject','1'],
             ['r','Tuio-Cursor', 'tuioCursor', ''],
-            ['r','attribute %m.objectAttributes of ','getTuioAttribute','']
+            ['r','attribute %m.objectAttributes of %n','getTuioAttribute','']
         ],
         menus: {
             objectAttributes: ['Position X', 'Position Y', 'Speed']
