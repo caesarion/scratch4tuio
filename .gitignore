@@ -1,3 +1,5 @@
 .sass-cache
 /scratch_extensions/browser_extension.js
 .idea
+/scratch_extensions/src/sammelsurium.js
+/scratch_extensions/src/TuioClientConnection.js

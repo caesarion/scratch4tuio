@@ -701,12 +701,14 @@ Tuio.Client = Tuio.Model.extend({
 
     onConnect: function() {
         this.socket.on("osc", this.acceptBundle);
+        console.log("connection established");
         this.connected = true;
         this.trigger("connect");
     },
 
     onDisconnect: function() {
         this.connected = false;
+        console.log("connection lost");
         this.trigger("disconnect");
     },
 
@@ -733,7 +735,16 @@ Tuio.Client = Tuio.Model.extend({
     acceptBundle: function(oscBundle) {
         var msg = null;
 
-        for (var i = 0, max = oscBundle.length; i < max; i++) {
+        var msg2 = oscBundle.split(",");
+        msg = msg2.slice(2, msg2.length-1);
+        switch (msg[0]) {
+            case "/tuio/2Dobj":
+            case "/tuio/2Dcur":
+                this.acceptMessage(msg);
+                break;
+        }
+        msg = msg2[2]
+      /*  for (var i = 0, max = oscBundle.length; i < max; i++) {
             msg = oscBundle[i];
             switch (msg[0]) {
                 case "/tuio/2Dobj":
@@ -741,7 +752,7 @@ Tuio.Client = Tuio.Model.extend({
                     this.acceptMessage(msg);
                     break;
             }
-        }
+        }*/
     },
 
     acceptMessage: function(oscMessage) {

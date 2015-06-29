@@ -18,6 +18,7 @@
     ext.update = [];
     ext.remove = [];
     ext.add = [];
+    ext.updateNumber = 0;
     ext.client = new Tuio.Client({
         host: "http://localhost:5000"
     }),
@@ -43,6 +44,8 @@
             ext.tuioObjects[updateObject.symbolId] = updateObject;
             ext.update[updateObject.symbolId] = true;
             ext.currentObject = updateObject;
+            console.log("update" + ext.updateNumber );
+            ext.updateNumber++;
         },
 
         onRemoveTuioObject = function(removeObject) {
@@ -51,7 +54,7 @@
         },
 
         onRefresh = function(time) {
-            //console.log(time);
+           // console.log("Refresh");
         };
 
     ext.client.on("addTuioCursor", onAddTuioCursor);
@@ -74,7 +77,7 @@
         // check if id is correct
         var correctID = ext.checkID(id);
         if(!correctID){
-            var errmsg = "ID is not valid";
+            var errmsg = "ID is not valid" + id;
            // alert(errmsg);
             console.error(errmsg);
             return false;
