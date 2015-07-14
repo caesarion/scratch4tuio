@@ -11246,9 +11246,10 @@ Tuio.Client = Tuio.Model.extend({
 
     window.trueUpdateCount = [];
     window.flip = [];
+    flipCount = 0;
     ext.updateEventHatBlock = function (id){
         // check if id is correct
-        var correctID = window.checkID(id);
+      /*  var correctID = window.checkID(id);
         if(!correctID){
             var errmsg = "ID is not valid" + id;
             console.error(errmsg);
@@ -11256,8 +11257,10 @@ Tuio.Client = Tuio.Model.extend({
         }
         if(window.flip[id] == true) {
             window.flip[id] = false;
+            flipCount++;
+            console.log("FlipCount: " + flipCount);
             return true;
-        }
+        }*/
         if(window.trueUpdateCount[id]  > 1){
             window.trueUpdateCount[id] = 0;
             window.flip[id] = true;
@@ -11267,7 +11270,7 @@ Tuio.Client = Tuio.Model.extend({
         if(typeof current !='undefined' && current !=null){
             var sessionTime =  Tuio.Time.getSessionTime();
             var currentTime = current.getTuioTime();
-            var timeDifference = Tuio.Time.getSessionTime().subtractTime(current.getTuioTime());
+            var timeDifference = sessionTime.subtractTime(currentTime);
             var value = (timeDifference.getSeconds() ==0 && timeDifference.getMicroseconds() <=100000);
             if(value) {
                 window.numberOfExecutionsHatBlock++;
@@ -11366,6 +11369,9 @@ Tuio.Client = Tuio.Model.extend({
 
     ext.uptadeOnAnyObject = function() {
         var id = window.latestObjectID;
+        var current = window.latestTuioObject;
+        var sessionTime =  Tuio.Time.getSessionTime();
+        var currentTime = current.getTuioTime();
         if(window.flip[id]) {
             window.flip[id] = false;
             return true;
@@ -11375,12 +11381,13 @@ Tuio.Client = Tuio.Model.extend({
             window.flip[id] = true;
             return false;
         }
-        if(window.lastUpdate) {
-            window.lastUpdate = false;
+        var timeDifference = sessionTime.subtractTime(currentTime);
+        var value = (timeDifference.getSeconds() ==0 && timeDifference.getMicroseconds() <=100000);
+        if(value) {
             if(window.trueUpdateCount[id])
                 window.trueUpdateCount[id] ++;
             else
-                window.trueUpdateCount = 0;
+                window.trueUpdateCount = 1;
             return true;
         }
         else
