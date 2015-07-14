@@ -2,6 +2,10 @@
 // @author: caesarion
 // https://github.com/caesarion/Scratch4TuioExtension/tree/gh-pages
 
+// ----------------------------------------------------------------------------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------------------------------------------------------------------------
+// ----------- start libraries' code
 if(typeof window.extensionWasLoaded == 'undefined') {
 // 2014 Shane M. Clements
 /*!
@@ -11144,6 +11148,10 @@ Tuio.Client = Tuio.Model.extend({
     }
 });
 }
+// ----------------------------------------------------------------------------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------------------------------------------------------------------------
+// ---------------- start tuio extension code
 (function(ext) {
     /* window.ScratchExtensions.loadExternalJS('scratch_extensions/libs/lodash.js');
      window.ScratchExtensions.loadExternalJS('scratch_extensions/libs/socket.io.js');
@@ -11162,7 +11170,10 @@ Tuio.Client = Tuio.Model.extend({
         window.remove = [];
         window.add = [];
         window.updateNumber = 0;
+        window.lastUpdate = false;
+        window.latestTuioObject = null;
         window.updateConsumedNumber=0;
+        window.latestObjectID = -2;
         window.client = new Tuio.Client({
             host: "http://localhost:5000"
         }),
@@ -11190,7 +11201,8 @@ Tuio.Client = Tuio.Model.extend({
                 window.update[updateObject.symbolId] = true;
                 window.updateNumber++;
                 console.log("updateNumber: "+ window.updateNumber);
-
+                window.lastUpdate = true;
+                window.latestTuioObject = updateObject;
             },
 
             onRemoveTuioObject = function(removeObject) {
@@ -11287,7 +11299,6 @@ Tuio.Client = Tuio.Model.extend({
     };
 
     ext.addEventHatBlock = function(id){
-
         if(window.checkID(id) == true){
             if(window.add[id] ==true){
                 window.add[id] =false;
@@ -11333,7 +11344,11 @@ Tuio.Client = Tuio.Model.extend({
     ext.getTuioAttribute = function(attributeName,id){
         window.numberOfExecutions++;
         console.log("ExecutionCountOfAttributeBlock: "+ window.numberOfExecutions);
-        var current = window.tuioObjects[id];
+        var current;
+        if(id == window.latestObjectID)
+            current = window.latestTuioObject;
+        else
+            current = window.tuioObjects[id];
         if(typeof current !='undefined' && current !=null){
             switch(attributeName) {
                 case 'Position X':
@@ -11349,12 +11364,40 @@ Tuio.Client = Tuio.Model.extend({
             return 'ERROR: No object with '+ id + " on camera!";
     };
 
+    ext.uptadeOnAnyObject = function() {
+        var id = window.latestObjectID;
+        if(window.flip[id]) {
+            window.flip[id] = false;
+            return true;
+        }
+        if(window.trueUpdateCount[id]  > 1){
+            window.trueUpdateCount[id] = 0;
+            window.flip[id] = true;
+            return false;
+        }
+        if(window.lastUpdate) {
+            window.lastUpdate = false;
+            if(window.trueUpdateCount[id])
+                window.trueUpdateCount[id] ++;
+            else
+                window.trueUpdateCount = 0;
+            return true;
+        }
+        else
+            return false;
+    };
+
+    ext.getLatestTuioObject = function() {
+        return window.latestObjectID;
+    };
 
     var descriptor = {
         blocks: [
-            ['h','update on %n','updateEventHatBlock',''],
-            ['h','%n added' ,'addEventHatBlock',''],
-            ['h','%n removed','removeEventHatBlock',''],
+            ['h','when %n updated','updateEventHatBlock',''],
+            ['h','when %n added' ,'addEventHatBlock',''],
+            ['h','when %n removed','removeEventHatBlock',''],
+            ['h','when any tuio object updated','uptadeOnAnyObject',''],
+            ['r','latest Tuio Object','getLatestTuioObject',''],
             ['r','Tuio-Object with ID %n','tuioObject','1'],
             ['r','Tuio-Cursor', 'tuioCursor', ''],
             ['r','attribute %m.objectAttributes of %n','getTuioAttribute','']
