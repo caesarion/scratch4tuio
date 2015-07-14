@@ -11322,13 +11322,15 @@ Tuio.Client = Tuio.Model.extend({
             current = window.tuioObjects[id];
         if(typeof current !='undefined' && current !=null){
             switch(attributeName) {
-                case 'Position X':
-
-                    return window.convertXToScratchCoordinate(current.getX()) ; break;
-                case 'Position Y':
-
-                    return window.convertYToScratchCoordinate(current.getY()); break;
-                case 'Speed': return current.getMotionSpeed(); break;
+                case 'Position X': return window.convertXToScratchCoordinate(current.getX()) ; break;
+                case 'Position Y': return window.convertYToScratchCoordinate(current.getY()); break;
+                case 'Angle': return current.getAngleDegrees(); break;
+                case 'Motion Speed': return current.getMotionSpeed(); break;
+                case 'Motion Accel': return current.getMotionAccel(); break;
+                case 'Rotation Speed': return current.getRotationSpeed(); break;
+                case 'Rotation Accel': return current.getRotationAccel(); break;
+                case 'xSpeed': return current.getXSpeed(); break;
+                case 'ySpeed': return current.getYSpeed(); break;
             }
         }
         else
@@ -11376,7 +11378,7 @@ Tuio.Client = Tuio.Model.extend({
             ['r','attribute %m.objectAttributes of %n','getTuioAttribute','']
         ],
         menus: {
-            objectAttributes: ['Position X', 'Position Y', 'Speed']
+            objectAttributes: ['Position X', 'Position Y', 'Angle','Motion Speed', 'Motion Accel','Rotation Speed', 'Rotation Accel', 'xSpeed', 'ySpeed']
         }
     };
 
