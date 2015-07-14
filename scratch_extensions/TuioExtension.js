@@ -11153,27 +11153,23 @@ Tuio.Client = Tuio.Model.extend({
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------
 // ---------------- start tuio extension code
 (function(ext) {
-    /* window.ScratchExtensions.loadExternalJS('scratch_extensions/libs/lodash.js');
-     window.ScratchExtensions.loadExternalJS('scratch_extensions/libs/socket.io.js');
-     window.ScratchExtensions.loadExternalJS('scratch_extensions/dist/Tuio.js');*/
-
-
 
     if(typeof window.extensionWasLoaded == 'undefined') {
-
+        // make sure intitilalization is done only once!
         window.extensionWasLoaded = true;
         console.log("FIRST LOAD");
         // initialize tuio client
         window.tuioObjects = [];
+        // set specific ID's
         window.cursorID = -1;
-        window.update = [];
+        window.latestObjectID = -2;
         window.remove = [];
         window.add = [];
         window.updateNumber = 0;
-        window.lastUpdate = false;
         window.latestTuioObject = null;
         window.updateConsumedNumber=0;
-        window.latestObjectID = -2;
+
+        // init client
         window.client = new Tuio.Client({
             host: "http://localhost:5000"
         }),
@@ -11198,10 +11194,8 @@ Tuio.Client = Tuio.Model.extend({
 
             onUpdateTuioObject = function(updateObject) {
                 window.tuioObjects[updateObject.symbolId] = updateObject;
-                window.update[updateObject.symbolId] = true;
                 window.updateNumber++;
                 console.log("updateNumber: "+ window.updateNumber);
-                window.lastUpdate = true;
                 window.latestTuioObject = updateObject;
             },
 
@@ -11222,9 +11216,14 @@ Tuio.Client = Tuio.Model.extend({
         window.client.on("removeTuioObject", onRemoveTuioObject);
         window.client.on("refresh", onRefresh);
         window.client.connect();
+
+
+        // define helper functions that work on the input of the blocks
+
         window.checkID = function(id){
             return ((id == window.cursorID || (id > 0 && id <88)) &&(!isNaN(id) && (function(x) { return (x | 0) === x; })(parseFloat(id))));
         };
+
 
         window.convertXToScratchCoordinate = function (coordinate) {
             return Math.round(-240.0 + 480.0 * coordinate);
@@ -11245,60 +11244,29 @@ Tuio.Client = Tuio.Model.extend({
     // define block behavior
 
     window.trueUpdateCount = [];
-    window.flip = [];
-    flipCount = 0;
     ext.updateEventHatBlock = function (id){
-        // check if id is correct
-      /*  var correctID = window.checkID(id);
-        if(!correctID){
-            var errmsg = "ID is not valid" + id;
-            console.error(errmsg);
-            return false;
-        }
-        if(window.flip[id] == true) {
-            window.flip[id] = false;
-            flipCount++;
-            console.log("FlipCount: " + flipCount);
-            return true;
-        }*/
         if(window.trueUpdateCount[id]  > 1){
             window.trueUpdateCount[id] = 0;
-            window.flip[id] = true;
             return false;
         }
         var current = window.tuioObjects[id];
-        if(typeof current !='undefined' && current !=null){
-            var sessionTime =  Tuio.Time.getSessionTime();
-            var currentTime = current.getTuioTime();
-            var timeDifference = sessionTime.subtractTime(currentTime);
-            var value = (timeDifference.getSeconds() ==0 && timeDifference.getMicroseconds() <=100000);
-            if(value) {
-                window.numberOfExecutionsHatBlock++;
-                console.log("Number of HatBlock Executions: " +  window.numberOfExecutionsHatBlock);
-            }
-            if(value){
-                if(window.trueUpdateCount[id]) {
-                    window.trueUpdateCount[id]++;
-                }
-                else {
-                    window.trueUpdateCount[id] = 1;
-                }
-            }
-            return value;
-        }
-        else
-        {
+        if(typeof current =='undefined' || current ==null)
             return false;
+
+        var sessionTime =  Tuio.Time.getSessionTime();
+        var currentTime = current.getTuioTime();
+        var timeDifference = sessionTime.subtractTime(currentTime);
+        var value = (timeDifference.getSeconds() ==0 && timeDifference.getMicroseconds() <=100000);
+        if(value){
+            if(window.trueUpdateCount[id]) {
+                window.trueUpdateCount[id]++;
+            }
+            else {
+                window.trueUpdateCount[id] = 1;
+            }
         }
-        /*  if(window.update[id] == true )
-         {
-         window.updateConsumedNumber++;
-         console.log("updateConsumeNumber: "+ window.updateConsumedNumber);
-         window.update[id] =false;
-         return true;
-         }
-         else
-         return false;*/
+        return value;
+
     };
 
     ext.addEventHatBlock = function(id){
@@ -11369,18 +11337,17 @@ Tuio.Client = Tuio.Model.extend({
 
     ext.uptadeOnAnyObject = function() {
         var id = window.latestObjectID;
-        var current = window.latestTuioObject;
-        var sessionTime =  Tuio.Time.getSessionTime();
-        var currentTime = current.getTuioTime();
-        if(window.flip[id]) {
-            window.flip[id] = false;
-            return true;
-        }
         if(window.trueUpdateCount[id]  > 1){
             window.trueUpdateCount[id] = 0;
-            window.flip[id] = true;
             return false;
         }
+
+        var current = window.latestTuioObject;
+        if(typeof current =='undefined' || current ==null)
+            return false;
+        var sessionTime =  Tuio.Time.getSessionTime();
+        var currentTime = current.getTuioTime();
+
         var timeDifference = sessionTime.subtractTime(currentTime);
         var value = (timeDifference.getSeconds() ==0 && timeDifference.getMicroseconds() <=100000);
         if(value) {
