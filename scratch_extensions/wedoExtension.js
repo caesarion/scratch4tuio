@@ -1,229 +1,334 @@
-// Scratch Extension to demonstrate some simple web browser functionality
-// 2014 Shane M. Clements
-
-
-
+// wedoExtension.js
+// Shane M. Clements, January 2014
+// LEGO WEDO Scratch Extension
+//
+// This is an extension for development and testing of the Scratch Javascript Extension API.
 
 (function(ext) {
-    /* window.ScratchExtensions.loadExternalJS('scratch_extensions/libs/lodash.js');
-     window.ScratchExtensions.loadExternalJS('scratch_extensions/libs/socket.io.js');
-     window.ScratchExtensions.loadExternalJS('scratch_extensions/dist/Tuio.js');*/
+    var device = null;
+    var rawData = null;
 
+    // Motor states: power: 0 to 100, dir: -1 or 1
+    var motors = [
+        {power: 100, dir: 1, isOn: false},
+        {power: 100, dir: 1, isOn: false}
+    ];
+    var motorOffTime = 0;
 
+    // Sensor states:
+    var id0 = 0;
+    var id1 = 0;
+    var weDoDistance = 0;
+    var weDoTilt = 0;
 
+    // Commands
+    ext.motorOnFor = function(motor, time, callback) {
+        //ext.allMotorsOn();
+        ext.motorOn(motor);
 
-    if(typeof window.extensionWasLoaded == 'undefined') {
-        window.extensionWasLoaded = true;
-        console.log("FIRST LOAD");
-        // initialize tuio client
-        window.tuioObjects = [];
-        window.cursorID = -1;
-        window.update = [];
-        window.remove = [];
-        window.add = [];
-        window.updateNumber = 0;
-        window.updateConsumedNumber=0;
-        window.client = new Tuio.Client({
-            host: "http://localhost:5000"
-        }),
+        setTimeout(function() {
+            ext.motorOff(motor);
+            //callback();
+            if (typeof callback=="function") callback();
+        }, 1000 * time);
+    };
 
-            onAddTuioCursor = function(addCursor) {
-                window.add[window.cursorID] = true;
-            },
+    ext.motorOn = function(motor) {
+        switch(motor) {
+            case "motor":
+                ext.allMotorsOn('m');
+                break;
+            case "motor A":
+                setMotorOn('m', 0, true);
+                break;
+            case "motor B":
+                setMotorOn('m', 1, true);
+                break;
+            case "lights":
+                ext.allMotorsOn('l');
+                break;
+            default:
+                ext.allMotorsOn('a');
+        }
+    };
 
-            onUpdateTuioCursor = function(updateCursor) {
-                window.update[window.cursorID] = true;
-            },
+    ext.allMotorsOn = function(type) {
+        setMotorOn(type, 0, true);
+        setMotorOn(type, 1, true);
+    };
 
-            onRemoveTuioCursor = function(removeCursor) {
-                window.remove[window.cursorID] = true;
-            },
+    ext.motorOff = function(motor) {
+        switch(motor) {
+            case "motor":
+                ext.allMotorsOff('m');
+                break;
+            case "motor A":
+                setMotorOn('m', 0, false);
+                break;
+            case "motor B":
+                setMotorOn('m', 1, false);
+                break;
+            case "lights":
+                ext.allMotorsOff('l');
+                break;
+            default:
+                ext.allMotorsOff('a');
+        }
+    };
 
-            onAddTuioObject = function(addObject) {
-                window.add[addObject.symbolId] = true;
-                window.tuioObjects[addObject.symbolId] = addObject;
+    ext.resetAll = function() {
+        ext.allMotorsOff('a');
+    };
+    ext.allMotorsOff = function(type) {
+        setMotorOn(type, 0, false);
+        setMotorOn(type, 1, false);
+    };
 
-            },
+    ext.startMotorPower = function(motor, power) {
+        switch(motor) {
+            case "motor":
+                setMotorPower('m', 0, power);
+                setMotorPower('m', 1, power);
+                setMotorOn('m', 0, true);
+                setMotorOn('m', 1, true);
+                break;
+            case "motor A":
+                setMotorPower('m', 0, power);
+                setMotorOn('m', 0, true);
+                break;
+            case "motor B":
+                setMotorPower('m', 1, power);
+                setMotorOn('m', 1, true);
+                break;
+            case "lights":
+                setMotorPower('l', 0, power);
+                setMotorPower('l', 1, power);
+                setMotorOn('l', 0, true);
+                setMotorOn('l', 1, true);
+                break;
+            default:
+                setMotorPower('a', 0, power);
+                setMotorPower('a', 1, power);
+                setMotorOn('a', 0, true);
+                setMotorOn('a', 1, true);
+        }
+    };
 
-            onUpdateTuioObject = function(updateObject) {
-                window.tuioObjects[updateObject.symbolId] = updateObject;
-                window.update[updateObject.symbolId] = true;
-                window.updateNumber++;
-                console.log("updateNumber: "+ window.updateNumber);
+    ext.setMotorDirection = function(motor, s) {
+        var dir;
+        if('this way' == s) dir = 1;
+        else if('that way' == s) dir = -1;
+        else if('reverse' == s) dir = 0;
+        else return;
 
-            },
+        switch(motor) {
+            case "motor A":
+                setMotorDirection(0, dir);
+                break;
+            case "motor B":
+                setMotorDirection(1, dir);
+                break;
+            default:
+                setMotorDirection(0, dir);
+                setMotorDirection(1, dir);
+        }
+    };
 
-            onRemoveTuioObject = function(removeObject) {
-                window.remove[removeObject.symbolId] = true;
-                window.tuioObjects[removeObject.symbolId] = null;
-            },
+    // Hat blocks
+    ext.whenDistance = function(s, dist) { return device!=null && ('<' == s ? (getDistance() < dist) : (getDistance() > dist)); };
+    ext.whenTilt = function(s, tilt) { return device!=null && ('=' == s ? (getTilt() == tilt) : (getTilt() != tilt)); };
+    //ext.whenDistanceLessThan = function(dist) { return device!=null && getDistance() < dist; };
+    //ext.whenTiltIs = function(tilt) { return device!=null && getTilt() == tilt; };
 
-            onRefresh = function(time) {
+    // Reporters
+    ext.getDistance = function() { return getDistance(); };
+    ext.getTilt = function() { return getTilt(); };
 
-            };
+    // Internal logic
+    function setMotorDirection(motorID, dir) {
+        // Dir: -1 - counter-clockwise, 1 - clockwise, 0 - reverse
+        var motor = getMotor('m', motorID);
+        if (!motor) return; // motorID must be 0 or 1
+        if ((dir == -1) || (dir == 1)) motor.dir = dir;
+        if (dir == 0) motor.dir = -motor.dir; // reverse
+        if (motor.isOn) sendMotorState();
+    };
 
-        window.client.on("addTuioCursor", onAddTuioCursor);
-        window.client.on("updateTuioCursor", onUpdateTuioCursor);
-        window.client.on("removeTuioCursor", onRemoveTuioCursor);
-        window.client.on("addTuioObject", onAddTuioObject);
-        window.client.on("updateTuioObject", onUpdateTuioObject);
-        window.client.on("removeTuioObject", onRemoveTuioObject);
-        window.client.on("refresh", onRefresh);
-        window.client.connect();
-        window.checkID = function(id){
-            return ((id == window.cursorID || (id > 0 && id <88)) &&(!isNaN(id) && (function(x) { return (x | 0) === x; })(parseFloat(id))));
-        };
+    function setMotorOn(type, motorID, flag) {
+        var motor = getMotor(type, motorID);
+        if (!motor) return; // motorID must be 0 or 1
+        var wasOn = motor.isOn && (motor.power > 0);
+        motor.isOn = (flag == true);
+        if (wasOn) checkForMotorsOff();
+        sendMotorState();
+    };
 
-        window.convertXToScratchCoordinate = function (coordinate) {
-            return Math.round(-240.0 + 480.0 * coordinate);
-        };
+    function setMotorPower(type, motorID, pwr) {
+        // Pwr: 0..100
+        var motor = getMotor(type, motorID);
+        if (!motor) return; // motorID must be 0 or 1
+        var wasOn = motor.isOn && (motor.power > 0);
+        motor.power = Math.max(0, Math.min(pwr, 100));
+        if (motor.power > 0) motor.isOn = true;
+        if (wasOn) checkForMotorsOff();
+        sendMotorState();
+    };
 
-        window.convertYToScratchCoordinate = function (coordinate) {
-            return Math.round ( 180.0 - 360.0 * coordinate);
-        };
-
-        // test/debug functions:
-        window.numberOfExecutions = 0;
-        window.numberOfExecutionsHatBlock = 0;
-
+    var wedoCommand = new Uint8Array(9); wedoCommand[1] = 0x40;
+    function sendMotorState() {
+        if (device) {
+            // Each motor is controlled by a signed byte whose sign determines the direction and absolute value the power
+            wedoCommand[2] = motorValue(0);
+            wedoCommand[3] = motorValue(1);
+            device.write(wedoCommand.buffer);
+        }
     }
-    else
-        console.log("RELOAD");
 
-    // define block behavior
+    function motorValue(motorID) {
+        // Return a two character hex string to control the given motor.
+        var motor = motors[motorID];
+        var byte = 0;
+        if (motor.isOn && (motor.power > 0)) byte = (17 + Math.floor(1.1 * motor.power));
+        if (motor.dir < 0) byte = (256 - byte) & 0xFF;
+        return byte;
+    }
 
-    window.trueUpdateCount = [];
-    window.flip = [];
-    ext.updateEventHatBlock = function (id){
-        // check if id is correct
-        var correctID = window.checkID(id);
-        if(!correctID){
-            var errmsg = "ID is not valid" + id;
-            console.error(errmsg);
-            return false;
+    function getMotor(type, motorID) {
+        if(rawData && okayToReadIDs()) {
+            var s = new Uint8Array(rawData);
+            id0 = s[3];
+            id1 = s[5];
         }
-        if(window.flip[id] == true) {
-            window.flip[id] = false;
-            return true;
+        //console.log(id0);
+        //console.log(id0.toString(2));
+        //console.log(id1);
+        //console.log(id1.toString(2));
+        //console.log();
+        if ((motorID == 0) && isMotor(type, id0)) return motors[0];
+        if ((motorID == 1) && isMotor(type, id1)) return motors[1];
+        return null;
+    }
+
+    function isMotor(type, id) {
+        switch (type) {
+            case 'm': // motor
+                return (234 <= id) && (id <= 246);
+            case 'l': // light
+                return (200 <= id) && (id <= 205);
         }
-        if(window.trueUpdateCount[id]  > 1){
-            window.trueUpdateCount[id] = 0;
-            window.flip[id] = true;
-            return false;
+        return ((234 <= id) && (id <= 246)) || ((200 <= id) && (id <= 205));
+    }
+
+    function checkForMotorsOff() {
+        // Called on motor transition from on to off or motor power goes from non-zero to zero.
+        // If both motors are just become off (or zero power), set motorOffTime to the current time.
+        if (motors[0].isOn && (motors[0].power > 0)) return; // motor 0 is still on
+        if (motors[1].isOn && (motors[1].power > 0)) return; // motor 1 is still on
+        motorOffTime = new Date().getTime();
+    }
+
+    function okayToReadIDs() {
+        // The WeDo sensor ID data is garbled and meaningless while any motor is running.
+        // In fact, the ID continues to be garbled for a short while after all motors have
+        // been turned off because the motor "coasts" and generates a current which throws
+        // off the analog-to-digital converter in the WeDo hub. Thus, we keep track when the last
+        // motor was turned off and wait half a second before trying to read the sensor ID's
+        // Cached values of the sensor ID's are used while motors are running. Thus, if a user
+        // plugs a different sensor into the WeDo hub while the motors are running, the plugin
+        // won't notice until all motors are stopped.
+        if (motors[0].isOn || motors[1].isOn) return false;
+        return (new Date().getTime() - motorOffTime) > 500;
+    }
+
+    function updateSensor(id, rawValue) {
+        if ((170 <= id) && (id <= 190)) { // distance sensor
+            weDoDistance = Math.round((100 * (rawValue - 70)) / 140);
+            weDoDistance = Math.max(0, Math.min(weDoDistance, 100));
         }
-        var current = window.tuioObjects[id];
-        if(typeof current !='undefined' && current !=null){
-            var sessionTime =  Tuio.Time.getSessionTime();
-            var currentTime = current.getTuioTime();
-            var timeDifference = Tuio.Time.getSessionTime().subtractTime(current.getTuioTime());
-            var value = (timeDifference.getSeconds() ==0 && timeDifference.getMicroseconds() <=100000);
-            if(value) {
-                window.numberOfExecutionsHatBlock++;
-                console.log("Number of HatBlock Executions: " +  window.numberOfExecutionsHatBlock);
-            }
-            if(value){
-                if(window.trueUpdateCount[id]) {
-                    window.trueUpdateCount[id]++;
-                }
-                else {
-                    window.trueUpdateCount[id] = 1;
-                }
-            }
-            return value;
+        if ((28 <= id) && (id <= 47)) { // tilt sensor
+            if (rawValue < 49) weDoTilt = 3;
+            else if (rawValue < 100) weDoTilt = 2;
+            else if (rawValue < 154) weDoTilt = 0;
+            else if (rawValue < 205) weDoTilt = 1;
+            else weDoTilt = 4;
         }
-        else
-        {
-            return false;
+    }
+
+    function getDistance() {
+        if(rawData) processData();
+        return weDoDistance;
+    }
+
+    function getTilt() {
+        if(rawData) processData();
+        return weDoTilt;
+    }
+
+    function processData() {
+        var s = new Uint8Array(rawData);
+
+        if (okayToReadIDs()) {
+            id0 = s[3];
+            id1 = s[5];
         }
-        /*  if(window.update[id] == true )
-         {
-         window.updateConsumedNumber++;
-         console.log("updateConsumeNumber: "+ window.updateConsumedNumber);
-         window.update[id] =false;
-         return true;
-         }
-         else
-         return false;*/
+        weDoDistance = weDoTilt = 0; // zero if no sensor plugged in
+        updateSensor(id0, s[2]);
+        updateSensor(id1, s[4]);
+
+        rawData = null;
+    }
+
+    var poller = null;
+    ext._deviceConnected = function(dev) {
+        if(device) return;
+
+        device = dev;
+        device.open();
+        poller = setInterval(function() {
+            rawData = device.read();
+        }, 20);
     };
 
-    ext.addEventHatBlock = function(id){
-
-        if(window.checkID(id) == true){
-            if(window.add[id] ==true){
-                window.add[id] =false;
-                return true;
-            }
-            else
-                return false;
-        }
-        else
-            return false;
-    };
-
-    ext.removeEventHatBlock = function(id){
-        if(window.checkID(id) == true){
-            if(window.remove[id] ==true){
-                window.remove[id] =false;
-                return true;
-            }
-            else
-                return false;
-        }
-        else
-            return false;
+    ext._deviceRemoved = function(dev) {
+        if(device != dev) return;
+        if(poller) poller = clearInterval(poller);
+        device = null;
     };
 
     ext._shutdown = function() {
-        window.client.socket.emit('Disconnect');
-        window.client.onDisconnect();
-        //ext = null;
-        console.log('Shutting down...');
+        setMotorOn('a', 0, false);
+        setMotorOn('a', 1, false);
+
+        if(poller) poller = clearInterval(poller);
+        if(device) device.close();
+        device = null;
     };
 
     ext._getStatus = function() {
-        return {status: 2, msg: 'Ready'};
-    };
-    ext.tuioObject = function(id){
-        return id;
-    };
-    ext.tuioCursor = function() {
-        return window.cursorID;
-    };
-
-    ext.getTuioAttribute = function(attributeName,id){
-        window.numberOfExecutions++;
-        console.log("ExecutionCountOfAttributeBlock: "+ window.numberOfExecutions);
-        var current = window.tuioObjects[id];
-        if(typeof current !='undefined' && current !=null){
-            switch(attributeName) {
-                case 'Position X':
-
-                    return window.convertXToScratchCoordinate(current.getX()) ; break;
-                case 'Position Y':
-
-                    return window.convertYToScratchCoordinate(current.getY()); break;
-                case 'Speed': return current.getMotionSpeed(); break;
-            }
-        }
-        else
-            return 'ERROR: No object with '+ id + " on camera!";
-    };
-
+        if(!device) return {status: 1, msg: 'LEGO WeDo disconnected'};
+        return {status: 2, msg: ' LEGO WeDo connected'};
+    }
 
     var descriptor = {
         blocks: [
-            ['h','update on %n','updateEventHatBlock',''],
-            ['h','%n added' ,'addEventHatBlock',''],
-            ['h','%n removed','removeEventHatBlock',''],
-            ['r','Tuio-Object with ID %n','tuioObject','1'],
-            ['r','Tuio-Cursor', 'tuioCursor', ''],
-            ['r','attribute %m.objectAttributes of %n','getTuioAttribute','']
+            ['w', 'turn %m.motor on for %n secs',               'motorOnFor',       'motor',1],
+            [' ', 'turn %m.motor on',                           'motorOn',          'motor'],
+            [' ', 'turn %m.motor off',                          'motorOff',         'motor'],
+            [' ', 'set %m.motor power to %n',                   'startMotorPower',  'motor',100],
+            [' ', 'set %m.motor2 direction to %m.motorDirection','setMotorDirection','motor','this way'],
+            ['h', 'when distance %m.lessMore %n',               'whenDistance',     '<',    20],
+            ['h', 'when tilt %m.eNe %n',                        'whenTilt',         '=',    1],
+            ['r', 'distance',                                   'getDistance'],
+            ['r', 'tilt',                                       'getTilt']
         ],
         menus: {
-            objectAttributes: ['Position X', 'Position Y', 'Speed']
-        }
+            motor: ['motor', 'motor A', 'motor B', 'lights', 'everything'],
+            motor2: ['motor', 'motor A', 'motor B', 'all motors'],
+            motorDirection: ['this way', 'that way', 'reverse'],
+            lessMore: ['<', '>'],
+            eNe: ['=','not =']
+        },
+        url: '/info/help/studio/tips/ext/LEGO WeDo/'
     };
-
-    ScratchExtensions.register('TuioExtension', descriptor, ext);
+    ScratchExtensions.register('LEGO WeDo', descriptor, ext, {type: 'hid', vendor:1684, product:3});
 })({});
-
