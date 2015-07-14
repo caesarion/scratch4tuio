@@ -8,17 +8,21 @@
     /* window.ScratchExtensions.loadExternalJS('scratch_extensions/libs/lodash.js');
      window.ScratchExtensions.loadExternalJS('scratch_extensions/libs/socket.io.js');
      window.ScratchExtensions.loadExternalJS('scratch_extensions/dist/Tuio.js');*/
+
+
+
+
     ext.checkID = function(id){
         return ((id == ext.cursorID || (id > 0 && id <88)) &&(!isNaN(id) && (function(x) { return (x | 0) === x; })(parseFloat(id))));
     };
     // initialize tuio client
     ext.tuioObjects = [];
     ext.cursorID = -1;
-    ext.currentObject = null;
     ext.update = [];
     ext.remove = [];
     ext.add = [];
     ext.updateNumber = 0;
+    ext.updateConsumedNumber=0;
     ext.client = new Tuio.Client({
         host: "http://localhost:5000"
     }),
@@ -38,14 +42,15 @@
         onAddTuioObject = function(addObject) {
             ext.add[addObject.symbolId] = true;
             ext.tuioObjects[addObject.symbolId] = addObject;
+
         },
 
         onUpdateTuioObject = function(updateObject) {
             ext.tuioObjects[updateObject.symbolId] = updateObject;
             ext.update[updateObject.symbolId] = true;
-            ext.currentObject = updateObject;
-            console.log("update" + ext.updateNumber );
             ext.updateNumber++;
+            console.log("updateNumber: "+ ext.updateNumber);
+
         },
 
         onRemoveTuioObject = function(removeObject) {
@@ -54,7 +59,7 @@
         },
 
         onRefresh = function(time) {
-           // console.log("Refresh");
+
         };
 
     ext.client.on("addTuioCursor", onAddTuioCursor);
@@ -73,49 +78,59 @@
         window.document.title = title;
     };
 
+    ext.trueUpdateCount = [];
+    ext.flip = [];
     ext.updateEventHatBlock = function (id){
         // check if id is correct
         var correctID = ext.checkID(id);
         if(!correctID){
             var errmsg = "ID is not valid" + id;
-           // alert(errmsg);
             console.error(errmsg);
             return false;
         }
-        if(ext.update[id] == true )
-        {
-            if(ext.currentObject !=null){
-                if(id == ext.cursorID ) {
-                    var errmsg = "update on object but no object set!!";
-                    alert(errmsg);
-                    console.error(errmsg);
-                    return false;
+        if(ext.flip[id] == true) {
+            ext.flip[id] = false;
+            return true;
+        }
+        if(ext.trueUpdateCount[id]  > 1){
+            ext.trueUpdateCount[id] = 0;
+            ext.flip[id] = true;
+            return false;
+        }
+        var current = ext.tuioObjects[id];
+        if(typeof current !='undefined' && current !=null){
+            var sessionTime =  Tuio.Time.getSessionTime();
+            var currentTime = current.getTuioTime();
+            var timeDifference = Tuio.Time.getSessionTime().subtractTime(current.getTuioTime());
+            var value = (timeDifference.getSeconds() ==0 && timeDifference.getMicroseconds() <=100000);
+            console.log( value );
+            if(value){
+                if(ext.trueUpdateCount[id]) {
+                    ext.trueUpdateCount[id]++;
                 }
-                if(ext.currentObject.symbolId ==id)
-                {
-                    ext.currentObject = null;
-                    ext.update[id] =false;
-                    return true;
+                else {
+                    ext.trueUpdateCount[id] = 1;
                 }
-                else
-                    return false;
             }
-            else{
-                if(id != ext.cursorID ) {
-                    var errmsg = "cursor update must have id = "+ ext.cursorID+ "!";
-                    alert(errmsg);
-                    console.error(errmsg);
-                    return false;
-                }
-                ext.update[id] =false;
-                return true;
-            }
+            return value;
         }
         else
+        {
             return false;
+        }
+      /*  if(ext.update[id] == true )
+        {
+            ext.updateConsumedNumber++;
+            console.log("updateConsumeNumber: "+ ext.updateConsumedNumber);
+            ext.update[id] =false;
+            return true;
+        }
+        else
+            return false;*/
     };
 
     ext.addEventHatBlock = function(id){
+
         if(ext.checkID(id) == true){
             if(ext.add[id] ==true){
                 ext.add[id] =false;
@@ -142,7 +157,9 @@
     };
 
     ext._shutdown = function() {
-
+		ext.client.socket.emit('Disconnect');
+		ext.client.onDisconnect();
+        //ext = null;
         console.log('Shutting down...');
     };
 
@@ -155,9 +172,10 @@
     ext.tuioCursor = function() {
         return ext.cursorID;
     };
-
+    ext.numberOfExecutions = 0;
     ext.getTuioAttribute = function(attributeName,id){
-
+        ext.numberOfExecutions++;
+        console.log("ExecutionCount: "+ ext.numberOfExecutions);
         var current = ext.tuioObjects[id];
         if(typeof current !='undefined' && current !=null){
             switch(attributeName) {

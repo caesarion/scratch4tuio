@@ -699,12 +699,16 @@ Tuio.Client = Tuio.Model.extend({
         this.socket.on("disconnect", this.onDisconnect);
     },
 
+    disconnect: function(){
+        this.socket.disconnect();
+    },
     onConnect: function() {
         this.socket.on("osc", this.acceptBundle);
         console.log("connection established");
         this.connected = true;
         this.trigger("connect");
     },
+
 
     onDisconnect: function() {
         this.connected = false;
