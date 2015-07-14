@@ -74,19 +74,23 @@
             return ((id == window.cursorID || (id > 0 && id <88)) &&(!isNaN(id) && (function(x) { return (x | 0) === x; })(parseFloat(id))));
         };
 
+        window.convertXToScratchCoordinate = function (coordinate) {
+            return Math.round(-240.0 + 480.0 * coordinate);
+        };
+
+        window.convertYToScratchCoordinate = function (coordinate) {
+            return Math.round ( 180.0 - 360.0 * coordinate);
+        };
+
+        // test/debug functions:
+        window.numberOfExecutions = 0;
+        window.numberOfExecutionsHatBlock = 0;
+
     }
     else
         console.log("RELOAD");
 
-
-
-
-
-
     // define block behavior
-
-
-
 
     window.trueUpdateCount = [];
     window.flip = [];
@@ -113,7 +117,10 @@
             var currentTime = current.getTuioTime();
             var timeDifference = Tuio.Time.getSessionTime().subtractTime(current.getTuioTime());
             var value = (timeDifference.getSeconds() ==0 && timeDifference.getMicroseconds() <=100000);
-            console.log( value );
+            if(value) {
+                window.numberOfExecutionsHatBlock++;
+                console.log("Number of HatBlock Executions: " +  window.numberOfExecutionsHatBlock);
+            }
             if(value){
                 if(window.trueUpdateCount[id]) {
                     window.trueUpdateCount[id]++;
@@ -182,21 +189,27 @@
     ext.tuioCursor = function() {
         return window.cursorID;
     };
-    window.numberOfExecutions = 0;
+
     ext.getTuioAttribute = function(attributeName,id){
         window.numberOfExecutions++;
-        console.log("ExecutionCount: "+ window.numberOfExecutions);
+        console.log("ExecutionCountOfAttributeBlock: "+ window.numberOfExecutions);
         var current = window.tuioObjects[id];
         if(typeof current !='undefined' && current !=null){
             switch(attributeName) {
-                case 'Position X': return current.getX() ; break;
-                case 'Position Y': return current.getY(); break;
+                case 'Position X':
+
+                    return window.convertXToScratchCoordinate(current.getX()) ; break;
+                case 'Position Y':
+
+                    return window.convertYToScratchCoordinate(current.getY()); break;
                 case 'Speed': return current.getMotionSpeed(); break;
             }
         }
         else
             return 'ERROR: No object with '+ id + " on camera!";
     };
+
+
     var descriptor = {
         blocks: [
             ['h','update on %n','updateEventHatBlock',''],
