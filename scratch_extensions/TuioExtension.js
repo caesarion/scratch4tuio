@@ -11341,24 +11341,23 @@ Tuio.Client = Tuio.Model.extend({
             window.trueUpdateCount[id] = 0;
             return false;
         }
-
         var current = window.latestTuioObject;
         if(typeof current =='undefined' || current ==null)
             return false;
+
         var sessionTime =  Tuio.Time.getSessionTime();
         var currentTime = current.getTuioTime();
-
         var timeDifference = sessionTime.subtractTime(currentTime);
         var value = (timeDifference.getSeconds() ==0 && timeDifference.getMicroseconds() <=100000);
-        if(value) {
-            if(window.trueUpdateCount[id])
-                window.trueUpdateCount[id] ++;
-            else
-                window.trueUpdateCount = 1;
-            return true;
+        if(value){
+            if(window.trueUpdateCount[id]) {
+                window.trueUpdateCount[id]++;
+            }
+            else {
+                window.trueUpdateCount[id] = 1;
+            }
         }
-        else
-            return false;
+        return value;
     };
 
     ext.getLatestTuioObject = function() {
