@@ -12262,7 +12262,7 @@ Tuio.Client = Tuio.Model.extend({
         var sessionTime =  Tuio.Time.getSessionTime();
         var currentTime = current.getTuioTime();
         var timeDifference = sessionTime.subtractTime(currentTime);
-        var value = (timeDifference.getSeconds() ==0 && timeDifference.getMicroseconds() <=100000);
+        var value = (timeDifference.getSeconds() ==0 && timeDifference.getMicroseconds() <=50000);
         if(value){
             if(window.trueUpdateCount[id]) {
                 window.trueUpdateCount[id]++;
@@ -12356,7 +12356,7 @@ Tuio.Client = Tuio.Model.extend({
         var sessionTime =  Tuio.Time.getSessionTime();
         var currentTime = current.getTuioTime();
         var timeDifference = sessionTime.subtractTime(currentTime);
-        var value = (timeDifference.getSeconds() ==0 && timeDifference.getMicroseconds() <=100000);
+        var value = (timeDifference.getSeconds() ==0 && timeDifference.getMicroseconds() <=50000);
         if(value){
             if(window.trueUpdateCount[id]) {
                 window.trueUpdateCount[id]++;
