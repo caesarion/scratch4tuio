@@ -6,21 +6,6 @@
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------
 // ----------- start libraries' code
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 if(typeof window.extensionWasLoaded == 'undefined') {
     /*
      * osc.js: An Open Sound Control library for JavaScript that works in both the browser and Node.js
@@ -11730,6 +11715,9 @@ Tuio.Client = Tuio.Model.extend({
                 case "/tuio/2Dcur":
                     this.acceptMessage(packet);
                     break;
+                case "/tuio/2Dblb":
+                    console.log("Blog received");
+                    break;
             }
         }
       /*  var msg = null;
@@ -12173,7 +12161,7 @@ Tuio.Client = Tuio.Model.extend({
         window.updateNumber = 0;
         window.latestTuioObject = null;
         window.updateConsumedNumber=0;
-        window.update = [];
+
 
         // init client
         window.client = new Tuio.Client({
@@ -12185,7 +12173,7 @@ Tuio.Client = Tuio.Model.extend({
             },
 
             onUpdateTuioCursor = function(updateCursor) {
-                window.update[window.cursorID] = true;
+                window.tuioObjects[window.cursorID] = updateCursor;
             },
 
             onRemoveTuioCursor = function(removeCursor) {
@@ -12251,20 +12239,20 @@ Tuio.Client = Tuio.Model.extend({
 
     window.trueUpdateCount = [];
     ext.updateEventHatBlock = function (id){
-        if(window.trueUpdateCount[id]  > 1){
+        if (window.trueUpdateCount[id] > 1) {
             window.trueUpdateCount[id] = 0;
             return false;
         }
         var current = window.tuioObjects[id];
-        if(typeof current =='undefined' || current ==null)
+        if (typeof current == 'undefined' || current == null)
             return false;
 
-        var sessionTime =  Tuio.Time.getSessionTime();
+        var sessionTime = Tuio.Time.getSessionTime();
         var currentTime = current.getTuioTime();
         var timeDifference = sessionTime.subtractTime(currentTime);
-        var value = (timeDifference.getSeconds() ==0 && timeDifference.getMicroseconds() <=50000);
-        if(value){
-            if(window.trueUpdateCount[id]) {
+        var value = (timeDifference.getSeconds() == 0 && timeDifference.getMicroseconds() <= 50000);
+        if (value) {
+            if (window.trueUpdateCount[id]) {
                 window.trueUpdateCount[id]++;
             }
             else {
