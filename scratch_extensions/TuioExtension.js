@@ -12146,27 +12146,36 @@ Tuio.Client = Tuio.Model.extend({
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------
 // ---------------- start tuio extension code
 (function(ext) {
-
+    // initialize tuio client ------------------------------------------------------------------------------------------
     if(typeof window.extensionWasLoaded == 'undefined') {
         // make sure intitilalization is done only once!
         window.extensionWasLoaded = true;
-        console.log("FIRST LOAD");
-        // initialize tuio client
+
+        // list of all tuio tuio objects that were updated, added or removed
         window.tuioObjects = [];
-        // set specific ID's
+
+        // list of counters that holds for every symbol-id the update count
+        // the counters are used to return false after the update-hat-block returned true two times.
+        // Necessary for the continous execution of the update-hat-block's program stack.
+        window.trueUpdateCount = [];
+
+        // set specific ID's -------------------------------------------------------------------------------------------
         window.cursorID = -1;
         window.latestObjectID = -2;
+
+        // list of boolean values that denote whether an object with a certain symbol-id was removed
         window.remove = [];
+        // list of boolean values that denote whether an object with a certain symbol-id was added
         window.add = [];
-        window.updateNumber = 0;
+
+        // references the latest tuio-object. Needed for the 'latest Tuio Object' block.
         window.latestTuioObject = null;
-        window.updateConsumedNumber=0;
 
-
-        // init client
+        // init socket.io client on port 5000 --------------------------------------------------------------------------
         window.client = new Tuio.Client({
             host: "http://localhost:5000"
         }),
+            // set the behavior of what should happen when a certain event occurs: -------------------------------------
 
             onAddTuioCursor = function(addCursor) {
                 window.add[window.cursorID] = true;
@@ -12183,13 +12192,10 @@ Tuio.Client = Tuio.Model.extend({
             onAddTuioObject = function(addObject) {
                 window.add[addObject.symbolId] = true;
                 window.tuioObjects[addObject.symbolId] = addObject;
-
             },
 
             onUpdateTuioObject = function(updateObject) {
                 window.tuioObjects[updateObject.symbolId] = updateObject;
-                window.updateNumber++;
-                console.log("updateNumber: "+ window.updateNumber);
                 window.latestTuioObject = updateObject;
             },
 
@@ -12202,6 +12208,7 @@ Tuio.Client = Tuio.Model.extend({
 
             };
 
+        // bind the defined behavior to the events: --------------------------------------------------------------
         window.client.on("addTuioCursor", onAddTuioCursor);
         window.client.on("updateTuioCursor", onUpdateTuioCursor);
         window.client.on("removeTuioCursor", onRemoveTuioCursor);
@@ -12209,35 +12216,37 @@ Tuio.Client = Tuio.Model.extend({
         window.client.on("updateTuioObject", onUpdateTuioObject);
         window.client.on("removeTuioObject", onRemoveTuioObject);
         window.client.on("refresh", onRefresh);
+
+        // try to connect the client to the helper-application server:
+        // if there is no connection possible, the event based socket.io client assures to reconnect as soon as
+        // the server is available
         window.client.connect();
 
-
-        // define helper functions that work on the input of the blocks
-
+        // define helper functions that work on the input of the blocks ----------------------------------------
         window.checkID = function(id){
             return ((id == window.cursorID || (id > 0 && id <88)) &&(!isNaN(id) && (function(x) { return (x | 0) === x; })(parseFloat(id))));
         };
 
-
-        window.convertXToScratchCoordinate = function (coordinate) {
-            return Math.round(-240.0 + 480.0 * coordinate);
+        // coordinate conversion from tuio to scratch coordinates.
+        // @param: xCoordinate -> the x-coordinate value. It is a number between 0 and 1 (e.g. a procentage rate). 0 means total left, 1 means total right.
+        // @result: the x value in scratch coordinates. A value between -240 (total left) and + 240 (total right)
+        window.convertXToScratchCoordinate = function (xCoordinate) {
+            return Math.round(-240.0 + 480.0 * xCoordinate);
         };
-
-        window.convertYToScratchCoordinate = function (coordinate) {
-            return Math.round ( 180.0 - 360.0 * coordinate);
+        // coordinate conversion from tuio to scratch coordinates.
+        // @param: yCoordinate --> the y-coordinate value. It is a number between 0 and 1 (e.g. a procentage rate). 0 means top, 1 means bottom
+        // @result: the y value in scratch coordinates. A value between +180 (top) and -180 (bottom)
+        window.convertYToScratchCoordinate = function (yCoordinate) {
+            return Math.round ( 180.0 - 360.0 * yCoordinate);
         };
-
-        // test/debug functions:
-        window.numberOfExecutions = 0;
-        window.numberOfExecutionsHatBlock = 0;
 
     }
-    else
-        console.log("RELOAD");
+    // end client initialisation ---------------------------------------------------------------------------------------
 
-    // define block behavior
+    // begin definition of block behavior ------------------------------------------------------------------------------
 
-    window.trueUpdateCount = [];
+    // this method defines the behavior of the update-event-hat-block. It is continuously executed by the scratch-flash-app, for every instantiated update-hat-block.
+    // @param: id --> the returned integer value of the block that is nested in the update-event-hat-block.
     ext.updateEventHatBlock = function (id){
         if (window.trueUpdateCount[id] > 1) {
             window.trueUpdateCount[id] = 0;
@@ -12263,6 +12272,8 @@ Tuio.Client = Tuio.Model.extend({
 
     };
 
+    // this method defines the behavior of the add-event-hat-block. It is continuously executed by the scratch-flash-app, for every instantiated add-hat-block.
+    // @param: id --> the returned integer value of the block that is nested in the add-event-hat-block.
     ext.addEventHatBlock = function(id){
         if(window.checkID(id) == true){
             if(window.add[id] ==true){
@@ -12276,6 +12287,8 @@ Tuio.Client = Tuio.Model.extend({
             return false;
     };
 
+    // this method defines the behavior of the remove-event-hat-block. It is continuously executed by the scratch-flash-app, for every instantiated remove-hat-block.
+    // @param: id --> the returned integer value of the block that is nested in the remove-event-hat-block.
     ext.removeEventHatBlock = function(id){
         if(window.checkID(id) == true){
             if(window.remove[id] ==true){
@@ -12289,26 +12302,22 @@ Tuio.Client = Tuio.Model.extend({
             return false;
     };
 
-    ext._shutdown = function() {
-        window.client.socket.emit('Disconnect');
-        window.client.onDisconnect();
-        //ext = null;
-        console.log('Shutting down...');
-    };
-
-    ext._getStatus = function() {
-        return {status: 2, msg: 'Ready'};
-    };
+    // this method defines the behavior of the tuioObject block. It just returns the id of the typed in integer value.
+    // @param: id --> the typed in integer value
     ext.tuioObject = function(id){
         return id;
     };
+
+    // this method defines the behavior of the tuio-cursor block. It just returns the cursor id.
     ext.tuioCursor = function() {
         return window.cursorID;
     };
 
+    // the method defines the behavior of the tuio-attribute-block. Returns the value of the
+    // given attribute with attribtueName and the tuio object with symbolID id.
+    // @param: attributeName --> the name of the attribute that should be returned
+    // @param: id --> the returned integer value of the block that is nested in the tuio-attribute-block.
     ext.getTuioAttribute = function(attributeName,id){
-        window.numberOfExecutions++;
-        console.log("ExecutionCountOfAttributeBlock: "+ window.numberOfExecutions);
         var current;
         if(id == window.latestObjectID)
             current = window.latestTuioObject;
@@ -12331,7 +12340,7 @@ Tuio.Client = Tuio.Model.extend({
             return 'ERROR: No object with '+ id + " on camera!";
     };
 
-    ext.uptadeOnAnyObject = function() {
+    ext.updateOnAnyObject = function() {
         var id = window.latestObjectID;
         if(window.trueUpdateCount[id]  > 1){
             window.trueUpdateCount[id] = 0;
@@ -12360,12 +12369,27 @@ Tuio.Client = Tuio.Model.extend({
         return window.latestObjectID;
     };
 
+    // end block behavior definitions ----------------------------------------------------------------------------------
+
+    // defined the shutdown behavior of the extension
+    ext._shutdown = function() {
+        window.client.socket.emit('Disconnect');
+        window.client.onDisconnect();
+        console.log('Shutting down...');
+    };
+
+    // the status is ready
+    ext._getStatus = function() {
+        return {status: 2, msg: 'Ready'};
+    };
+
+    // create descriptor for the Scratch flash app ---------------------------------------------------------------------
     var descriptor = {
         blocks: [
             ['h','when %n updated','updateEventHatBlock',''],
             ['h','when %n added' ,'addEventHatBlock',''],
             ['h','when %n removed','removeEventHatBlock',''],
-            ['h','when any tuio object updated','uptadeOnAnyObject',''],
+            ['h','when any tuio object updated','updateOnAnyObject',''],
             ['r','latest Tuio Object','getLatestTuioObject',''],
             ['r','Tuio-Object with ID %n','tuioObject','1'],
             ['r','Tuio-Cursor', 'tuioCursor', ''],
@@ -12376,6 +12400,7 @@ Tuio.Client = Tuio.Model.extend({
         }
     };
 
+    // register the extension at the Scratch flash app -----------------------------------------------------------------
     ScratchExtensions.register('TuioExtension', descriptor, ext);
 })({});
 
