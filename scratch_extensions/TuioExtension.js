@@ -12246,7 +12246,8 @@ Tuio.Client = Tuio.Model.extend({
     // begin definition of block behavior ------------------------------------------------------------------------------
 
     // this method defines the behavior of the update-event-hat-block. It is continuously executed by the scratch-flash-app, for every instantiated update-hat-block.
-    // @param: id --> the returned integer value of the block that is nested in the update-event-hat-block.
+    // The update-event-block executes is command stack, if and only if the tuio object with the given symbolID is updated within the last 50 ms.
+    // @param: id --> the symbolID of the object that should be checked for updates.
     ext.updateEventHatBlock = function (id){
         if (window.trueUpdateCount[id] > 1) {
             window.trueUpdateCount[id] = 0;
@@ -12273,7 +12274,7 @@ Tuio.Client = Tuio.Model.extend({
     };
 
     // this method defines the behavior of the add-event-hat-block. It is continuously executed by the scratch-flash-app, for every instantiated add-hat-block.
-    // @param: id --> the returned integer value of the block that is nested in the add-event-hat-block.
+    // @param: id --> the symbolID of the object that should be checked for addings.
     ext.addEventHatBlock = function(id){
         if(window.checkID(id) == true){
             if(window.add[id] ==true){
@@ -12288,7 +12289,7 @@ Tuio.Client = Tuio.Model.extend({
     };
 
     // this method defines the behavior of the remove-event-hat-block. It is continuously executed by the scratch-flash-app, for every instantiated remove-hat-block.
-    // @param: id --> the returned integer value of the block that is nested in the remove-event-hat-block.
+    // @param: id --> the symbolID of the object that should be checked for removals.
     ext.removeEventHatBlock = function(id){
         if(window.checkID(id) == true){
             if(window.remove[id] ==true){
@@ -12340,6 +12341,8 @@ Tuio.Client = Tuio.Model.extend({
             return 'ERROR: No object with '+ id + " on camera!";
     };
 
+    // this method defines te behavior of the 'updateOnAny'-hat-block. The hat block executes its command stack, if and only if
+    // there was an update on any tuio object within the last 50 ms
     ext.updateOnAnyObject = function() {
         var id = window.latestObjectID;
         if(window.trueUpdateCount[id]  > 1){
@@ -12365,6 +12368,7 @@ Tuio.Client = Tuio.Model.extend({
         return value;
     };
 
+    // this method defines the behavior of the 'latest tuio object' block. It returns the symbolID of the latest changed object.
     ext.getLatestTuioObject = function() {
         return window.latestObjectID;
     };
@@ -12378,7 +12382,7 @@ Tuio.Client = Tuio.Model.extend({
         console.log('Shutting down...');
     };
 
-    // the status is ready
+    // standard answer
     ext._getStatus = function() {
         return {status: 2, msg: 'Ready'};
     };
