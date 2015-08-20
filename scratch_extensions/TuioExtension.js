@@ -12326,15 +12326,17 @@ Tuio.Client = Tuio.Model.extend({
             current = window.tuioObjects[id];
         if(typeof current !='undefined' && current !=null){
             switch(attributeName) {
-                case 'Position X': return window.convertXToScratchCoordinate(current.getX()) ; break;
-                case 'Position Y': return window.convertYToScratchCoordinate(current.getY()); break;
-                case 'Angle': return current.getAngleDegrees(); break;
-                case 'Motion Speed': return current.getMotionSpeed(); break;
-                case 'Motion Accel': return current.getMotionAccel(); break;
-                case 'Rotation Speed': return current.getRotationSpeed(); break;
-                case 'Rotation Accel': return current.getRotationAccel(); break;
-                case 'xSpeed': return current.getXSpeed(); break;
-                case 'ySpeed': return current.getYSpeed(); break;
+				case menus[lang].objectAttributes [0]: // case PosX
+					return window.convertXToScratchCoordinate(current.getX()) ; break;
+                case menus[lang].objectAttributes [1]: // case PosY
+					return window.convertYToScratchCoordinate(current.getY()); break;
+                case menus[lang].objectAttributes [2]: return current.getAngleDegrees(); break;
+                case menus[lang].objectAttributes [3]: return current.getMotionSpeed(); break;
+                case menus[lang].objectAttributes [4]: return current.getMotionAccel(); break;
+                case menus[lang].objectAttributes [5]: return current.getRotationSpeed(); break;
+                case menus[lang].objectAttributes [6]: return current.getRotationAccel(); break;
+                case menus[lang].objectAttributes [7]: return current.getXSpeed(); break;
+                case menus[lang].objectAttributes [8]: return current.getYSpeed(); break;
             }
         }
         else
@@ -12387,9 +12389,19 @@ Tuio.Client = Tuio.Model.extend({
         return {status: 2, msg: 'Ready'};
     };
 
-    // create descriptor for the Scratch flash app ---------------------------------------------------------------------
-    var descriptor = {
-        blocks: [
+	
+	// find out language --> Check for GET param 'lang'
+	  var paramString = window.location.search.replace(/^\?|\/$/g, '');
+	  var vars = paramString.split("&");
+	  var lang = 'en';
+	  for (var i=0; i<vars.length; i++) {
+		var pair = vars[i].split('=');
+		if (pair.length > 1 && pair[0]=='lang')
+		  lang = pair[1];
+	  }
+
+	var blocks = {
+		en: [
             ['h','when %n updated','updateEventHatBlock',''],
             ['h','when %n added' ,'addEventHatBlock',''],
             ['h','when %n removed','removeEventHatBlock',''],
@@ -12399,9 +12411,30 @@ Tuio.Client = Tuio.Model.extend({
             ['r','Tuio-Cursor', 'tuioCursor', ''],
             ['r','attribute %m.objectAttributes of %n','getTuioAttribute','']
         ],
-        menus: {
-            objectAttributes: ['Position X', 'Position Y', 'Angle','Motion Speed', 'Motion Accel','Rotation Speed', 'Rotation Accel', 'xSpeed', 'ySpeed']
-        }
+		de: [
+			['h','falls %n ein Update erhaelt','updateEventHatBlock',''],
+            ['h','falls %n hinzugefuegt wird' ,'addEventHatBlock',''],
+            ['h','falls %n entfernt wird','removeEventHatBlock',''],
+            ['h','falls irgendein Tuio Objekt geupdatet wird','updateOnAnyObject',''],
+            ['r','zuletzt veraendertes Object mit ','getLatestTuioObject',''],
+            ['r','Tuio-Object mit der Nummer %n','tuioObject','1'],
+            ['r','Tuio-Maus', 'tuioCursor', ''],
+            ['r','Attribut %m.objectAttributes von %n','getTuioAttribute','']
+		]		
+	}
+	
+	var menus = {
+		en: {
+			objectAttributes: ['Position X', 'Position Y', 'Angle','Motion Speed', 'Motion Accel','Rotation Speed', 'Rotation Accel', 'xSpeed', 'ySpeed']
+		},
+		de: {
+			objectAttributes: ['Position X', 'Position Y', 'Winkel','Bewegungsgeschwindigkeit', 'Bewegungsbeschleunigung','Drehgeschwindigkeit', 'Drehbeschleunigung', 'xGeschwindigkeit', 'xBeschleunigung']
+		}
+	}
+    // create descriptor for the Scratch flash app ---------------------------------------------------------------------
+    var descriptor = {
+        blocks: blocks[lang],
+        menus: menus[lang]
     };
 
     // register the extension at the Scratch flash app -----------------------------------------------------------------
