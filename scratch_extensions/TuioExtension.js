@@ -9019,7 +9019,7 @@ if(typeof window.extensionWasLoaded == 'undefined') {
                     return continuationByte & 0x3F;
                 }
 
-                // If we end up here, it’s not a continuation byte
+                // If we end up here, itÓ³ not a continuation byte
                 throw Error('Invalid continuation byte');
             }
 
@@ -12309,6 +12309,13 @@ Tuio.Client = Tuio.Model.extend({
         return id;
     };
 
+	
+	
+	// this method re
+	
+	
+	
+	
     // this method defines the behavior of the tuio-cursor block. It just returns the cursor id.
     ext.tuioCursor = function() {
         return window.cursorID;
@@ -12342,8 +12349,43 @@ Tuio.Client = Tuio.Model.extend({
         else
             return 'ERROR: No object with '+ id + " on camera!";
     };
+	
+	
+	// the method defines the behavior of the tuio-state block. It returns whether the tuio-object with symboldID 'symbolID' is in the 
+	// state 'state'
+	// @ param: id --> the returned integer value of the block that is nested in the tuio-attribute-block. Should be a symboldID
+	// @param state --> the state that should be checked
+	ext.getStateOfTuioObject = function(symbolID, state) {
+		var current;
+		 if(id == window.latestObjectID)
+            current = window.latestTuioObject;
+        else
+            current = window.tuioObjects[id];
+		if(typeof current !='undefined' && current !=null){
+			switch(attributeName) {
+				var currenStatus = getTuioState();
+				case menus[lang].objectStates [0]: // case Moving
+					return  return (
+									(currenStatus === Tuio.Object.TUIO_ACCELERATING) ||
+									(currenStatus === Tuio.Object.TUIO_DECELERATING) ||
+									(currenStatus === Tuio.Object.TUIO_ROTATING)
+								);  ; break;
+				case menus[lang].objectStates [1]: // case Accelerating
+					return currenStatus == Tuio.Object.TUIO_ACCELERATING; break;
+				case menus[lang].objectStates [2]: // case Decelerating
+					return currenStatus == Tuio.Object.TUIO_DECELERATING; break;
+				case menus[lang].objectStates [3]: // case Rotating
+					return currenStatus == Tuio.Object.TUIO_ROTATING; break;				
+            }
+        }
+        else
+            return 'ERROR: No object with '+ id + " on camera!";
+		
+		
+	}
+	
 
-    // this method defines te behavior of the 'updateOnAny'-hat-block. The hat block executes its command stack, if and only if
+    // this method defines the behavior of the 'updateOnAny'-hat-block. The hat block executes its command stack, if and only if
     // there was an update on any tuio object within the last 50 ms
     ext.updateOnAnyObject = function() {
         var id = window.latestObjectID;
@@ -12390,10 +12432,12 @@ Tuio.Client = Tuio.Model.extend({
     };
 
 	
+	
+	
 	// find out language --> Check for GET param 'lang'
 	  var paramString = window.location.search.replace(/^\?|\/$/g, '');
 	  var vars = paramString.split("&");
-	  var lang = 'en';
+	  var lang = 'de';
 	  for (var i=0; i<vars.length; i++) {
 		var pair = vars[i].split('=');
 		if (pair.length > 1 && pair[0]=='lang')
@@ -12409,7 +12453,8 @@ Tuio.Client = Tuio.Model.extend({
             ['r','latest Tuio Object','getLatestTuioObject',''],
             ['r','Tuio-Object with ID %n','tuioObject','1'],
             ['r','Tuio-Cursor', 'tuioCursor', ''],
-            ['r','attribute %m.objectAttributes of %n','getTuioAttribute','']
+            ['r','attribute %m.objectAttributes of %n','getTuioAttribute',''],
+			['b', 'Is %n %m.objectStates ?', 'getStateOfTuioObject' , '']
         ],
 		de: [
 			['h','falls %n ein Update erhaelt','updateEventHatBlock',''],
@@ -12419,16 +12464,19 @@ Tuio.Client = Tuio.Model.extend({
             ['r','zuletzt veraendertes Object mit ','getLatestTuioObject',''],
             ['r','Tuio-Object mit der Nummer %n','tuioObject','1'],
             ['r','Tuio-Maus', 'tuioCursor', ''],
-            ['r','Attribut %m.objectAttributes von %n','getTuioAttribute','']
+            ['r','Attribut %m.objectAttributes von %n','getTuioAttribute',''],
+			['b', 'Status von  %n : %m.objectStates?', 'getStateOfTuioObject' , '']
 		]		
 	}
 	
 	var menus = {
 		en: {
-			objectAttributes: ['Position X', 'Position Y', 'Angle','Motion Speed', 'Motion Accel','Rotation Speed', 'Rotation Accel', 'xSpeed', 'ySpeed']
+			objectAttributes: ['Position X', 'Position Y', 'Angle','Motion Speed', 'Motion Accel','Rotation Speed', 'Rotation Accel', 'xSpeed', 'ySpeed'],
+			objectStates: ['moving','accelerating','decelerating','rotating']
 		},
 		de: {
-			objectAttributes: ['Position X', 'Position Y', 'Winkel','Bewegungsgeschwindigkeit', 'Bewegungsbeschleunigung','Drehgeschwindigkeit', 'Drehbeschleunigung', 'xGeschwindigkeit', 'xBeschleunigung']
+			objectAttributes: ['Position X', 'Position Y', 'Winkel','Bewegungsgeschwindigkeit', 'Bewegungsbeschleunigung','Drehgeschwindigkeit', 'Drehbeschleunigung', 'xGeschwindigkeit', 'xBeschleunigung'],
+			objectStates: ['Bewegt sich','Beschleunigt','Bremst','Dreht sich']
 		}
 	}
     // create descriptor for the Scratch flash app ---------------------------------------------------------------------
