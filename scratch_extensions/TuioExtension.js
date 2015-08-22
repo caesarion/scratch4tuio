@@ -12357,7 +12357,7 @@ Tuio.Client = Tuio.Model.extend({
 	// @param state --> the state that should be checked
 	ext.getStateOfTuioObject = function(symbolID, state) {
 		var current;
-		 if(id == window.latestObjectID)
+		if(id == window.latestObjectID)
             current = window.latestTuioObject;
         else
             current = window.tuioObjects[id];
@@ -12365,11 +12365,7 @@ Tuio.Client = Tuio.Model.extend({
 			switch(attributeName) {
 				var currenStatus = getTuioState();
 				case menus[lang].objectStates [0]: // case Moving
-					return  return (
-									(currenStatus === Tuio.Object.TUIO_ACCELERATING) ||
-									(currenStatus === Tuio.Object.TUIO_DECELERATING) ||
-									(currenStatus === Tuio.Object.TUIO_ROTATING)
-								);  ; break;
+					return  ((currenStatus === Tuio.Object.TUIO_ACCELERATING) ||(currenStatus === Tuio.Object.TUIO_DECELERATING) ||(currenStatus === Tuio.Object.TUIO_ROTATING));  ; break;
 				case menus[lang].objectStates [1]: // case Accelerating
 					return currenStatus == Tuio.Object.TUIO_ACCELERATING; break;
 				case menus[lang].objectStates [2]: // case Decelerating
@@ -12379,10 +12375,8 @@ Tuio.Client = Tuio.Model.extend({
             }
         }
         else
-            return 'ERROR: No object with '+ id + " on camera!";
-		
-		
-	}
+            return 'ERROR: No object with '+ id + " on camera!";		
+	};
 	
 
     // this method defines the behavior of the 'updateOnAny'-hat-block. The hat block executes its command stack, if and only if
@@ -12488,4 +12482,3 @@ Tuio.Client = Tuio.Model.extend({
     // register the extension at the Scratch flash app -----------------------------------------------------------------
     ScratchExtensions.register('TuioExtension', descriptor, ext);
 })({});
-
