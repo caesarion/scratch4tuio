@@ -11566,7 +11566,9 @@ Tuio.Object = Tuio.Container.extend({
     },
 
     updateObjectState: function() {
-        if ((this.rotationAccel !== 0) && (this.state !== Tuio.Object.TUIO_STOPPED)) {
+    	// actual line:
+    	// if ((this.rotationAccel !== 0)&& (this.state !== Tuio.Object.TUIO_STOPPED) ) {
+        if ((this.rotationAccel !== 0) ) {
             this.state = Tuio.Object.TUIO_ROTATING;
         }
     },
@@ -12357,21 +12359,21 @@ Tuio.Client = Tuio.Model.extend({
 	// @param state --> the state that should be checked
 	ext.getStateOfTuioObject = function(symbolID, state) {
 		var current;
-		if(id == window.latestObjectID)
+		if(symbolID == window.latestObjectID)
             current = window.latestTuioObject;
         else
-            current = window.tuioObjects[id];
+            current = window.tuioObjects[symbolID];
 		if(typeof current !='undefined' && current !=null){
-			switch(attributeName) {
-				var currenStatus = getTuioState();
+			var currentStatus = current.getTuioState();
+			switch(state) {				
 				case menus[lang].objectStates [0]: // case Moving
-					return  ((currenStatus === Tuio.Object.TUIO_ACCELERATING) ||(currenStatus === Tuio.Object.TUIO_DECELERATING) ||(currenStatus === Tuio.Object.TUIO_ROTATING));  ; break;
+					return  ((currentStatus === Tuio.Object.TUIO_ACCELERATING) ||(currentStatus === Tuio.Object.TUIO_DECELERATING) ||(currentStatus === Tuio.Object.TUIO_ROTATING));  ; break;
 				case menus[lang].objectStates [1]: // case Accelerating
-					return currenStatus == Tuio.Object.TUIO_ACCELERATING; break;
+					return currentStatus == Tuio.Object.TUIO_ACCELERATING; break;
 				case menus[lang].objectStates [2]: // case Decelerating
-					return currenStatus == Tuio.Object.TUIO_DECELERATING; break;
+					return currentStatus == Tuio.Object.TUIO_DECELERATING; break;
 				case menus[lang].objectStates [3]: // case Rotating
-					return currenStatus == Tuio.Object.TUIO_ROTATING; break;				
+					return currentStatus == Tuio.Object.TUIO_ROTATING; break;				
             }
         }
         else
@@ -12448,16 +12450,16 @@ Tuio.Client = Tuio.Model.extend({
             ['r','Tuio-Object with ID %n','tuioObject','1'],
             ['r','Tuio-Cursor', 'tuioCursor', ''],
             ['r','attribute %m.objectAttributes of %n','getTuioAttribute',''],
-			['b', 'Is %n %m.objectStates ?', 'getStateOfTuioObject' , '']
+            ['b', 'Is %n %m.objectStates ?', 'getStateOfTuioObject' , '']
         ],
 		de: [
-			['h','falls %n ein Update erhaelt','updateEventHatBlock',''],
-            ['h','falls %n hinzugefuegt wird' ,'addEventHatBlock',''],
+			['h','falls %n ein Update erhält','updateEventHatBlock',''],
+            ['h','falls %n hinzugefügt wird' ,'addEventHatBlock',''],
             ['h','falls %n entfernt wird','removeEventHatBlock',''],
-            ['h','falls irgendein Tuio Objekt geupdatet wird','updateOnAnyObject',''],
-            ['r','zuletzt veraendertes Object mit ','getLatestTuioObject',''],
+            ['h','falls irgendein Tuio-Objekt geupdatet wird','updateOnAnyObject',''],
+            ['r','zuletzt verändertes Objekt mit ','getLatestTuioObject',''],
             ['r','Tuio-Object mit der Nummer %n','tuioObject','1'],
-            ['r','Tuio-Maus', 'tuioCursor', ''],
+            ['r','Tuio-Zeiger', 'tuioCursor', ''],
             ['r','Attribut %m.objectAttributes von %n','getTuioAttribute',''],
 			['b', 'Status von  %n : %m.objectStates?', 'getStateOfTuioObject' , '']
 		]		
