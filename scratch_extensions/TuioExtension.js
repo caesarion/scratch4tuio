@@ -12162,8 +12162,8 @@ Tuio.Client = Tuio.Model.extend({
         window.trueUpdateCount = [];
 
         // set specific ID's -------------------------------------------------------------------------------------------
-        window.cursorID = -1;
-        window.latestObjectID = -2;
+        window.cursorID = 0;
+        window.latestObjectID = 1000;
 
         // list of boolean values that denote whether an object with a certain symbol-id was removed
         window.remove = [];
@@ -12173,6 +12173,9 @@ Tuio.Client = Tuio.Model.extend({
         // references the latest tuio-object. Needed for the 'latest Tuio Object' block.
         window.latestTuioObject = null;
 
+        // the microseconds until an event expires (e.g. is not used any more)
+        window.expiringMicroseconds = 50000;
+        
         // init socket.io client on port 5000 --------------------------------------------------------------------------
         window.client = new Tuio.Client({
             host: "http://localhost:5000"
@@ -12181,6 +12184,7 @@ Tuio.Client = Tuio.Model.extend({
 
             onAddTuioCursor = function(addCursor) {
                 window.add[window.cursorID] = true;
+                window.remove[window.cursorID] = null;
             },
 
             onUpdateTuioCursor = function(updateCursor) {
@@ -12188,22 +12192,26 @@ Tuio.Client = Tuio.Model.extend({
             },
 
             onRemoveTuioCursor = function(removeCursor) {
-                window.remove[window.cursorID] = true;
+                window.remove[window.cursorID] = removeCursor;              
             },
 
             onAddTuioObject = function(addObject) {
                 window.add[addObject.symbolId] = true;
+                window.remove[addObject.symbolId] = null;
                 window.tuioObjects[addObject.symbolId] = addObject;
             },
 
             onUpdateTuioObject = function(updateObject) {
                 window.tuioObjects[updateObject.symbolId] = updateObject;
+                window.tuioObjects[-updateObject.sessionId] = updateObject;
                 window.latestTuioObject = updateObject;
             },
 
             onRemoveTuioObject = function(removeObject) {
-                window.remove[removeObject.symbolId] = true;
+                window.remove[removeObject.symbolId] = removeObject;
+                window.add[removeObject.symbolId] = null;
                 window.tuioObjects[removeObject.symbolId] = null;
+                window.tuioObjects[-removeObject.sessionId] = null;
             },
 
             onRefresh = function(time) {
@@ -12262,7 +12270,7 @@ Tuio.Client = Tuio.Model.extend({
         var sessionTime = Tuio.Time.getSessionTime();
         var currentTime = current.getTuioTime();
         var timeDifference = sessionTime.subtractTime(currentTime);
-        var value = (timeDifference.getSeconds() == 0 && timeDifference.getMicroseconds() <= 50000);
+        var value = (timeDifference.getSeconds() == 0 && timeDifference.getMicroseconds() <= window.expiringMicroseconds);
         if (value) {
             if (window.trueUpdateCount[id]) {
                 window.trueUpdateCount[id]++;
@@ -12275,7 +12283,7 @@ Tuio.Client = Tuio.Model.extend({
 
     };
 
-    // this method defines the behavior of the add-event-hat-block. It is continuously executed by the scratch-flash-app, for every instantiated add-hat-block.
+	// this method defines the behavior of the add-event-hat-block. It is continuously executed by the scratch-flash-app, for every instantiated add-hat-block.
     // @param: id --> the symbolID of the object that should be checked for addings.
     ext.addEventHatBlock = function(id){
         if(window.checkID(id) == true){
@@ -12293,40 +12301,37 @@ Tuio.Client = Tuio.Model.extend({
     // this method defines the behavior of the remove-event-hat-block. It is continuously executed by the scratch-flash-app, for every instantiated remove-hat-block.
     // @param: id --> the symbolID of the object that should be checked for removals.
     ext.removeEventHatBlock = function(id){
-        if(window.checkID(id) == true){
-            if(window.remove[id] ==true){
-                window.remove[id] =false;
-                return true;
-            }
-            else
-                return false;
-        }
-        else
-            return false;
+    	  var current = window.remove[id];
+          if (typeof current == 'undefined' || current == null)
+        	  return false;
+          var currentStatus = current.getTuioState();
+        
+          return currentStatus == Tuio.Container.TUIO_REMOVED;
     };
 
-    // this method defines the behavior of the tuioObject block. It just returns the id of the typed in integer value.
+    // this method defines the behavior of the tuioObject block. It returns the id of the typed in integer value.
     // @param: id --> the typed in integer value
     ext.tuioObject = function(id){
         return id;
-    };
-
+    };	
 	
-	
-	// this method re
-	
-	
-	
-	
-    // this method defines the behavior of the tuio-cursor block. It just returns the cursor id.
+    // this method defines the behavior of the tuioObject SessionID block. It encodes the the typed in integer value by returning  
+    // -id. This way, the blocks can distinguish between sessionID and SymboldID
+    // @param: id --> the typed in integer value in the block
+    ext.tuioObjectSessionID = function(id){
+        return -id;
+    };	
+    
+    // this method defines the behavior of the tuio-cursor block. It returns the cursor id.
     ext.tuioCursor = function() {
         return window.cursorID;
     };
 
     // the method defines the behavior of the tuio-attribute-block. Returns the value of the
-    // given attribute with attribtueName and the tuio object with symbolID id.
+    // given attribute with attribtueName and the tuio object with symbolID id, or the tuio-cursor, or the latest object id
     // @param: attributeName --> the name of the attribute that should be returned
-    // @param: id --> the returned integer value of the block that is nested in the tuio-attribute-block.
+    // @param: id --> the returned integer value of the block that is nested in the tuio-attribute-block. Should be a symboldID or 
+    // the window.latestObjectID or the window.cursorID
     ext.getTuioAttribute = function(attributeName,id){
         var current;
         if(id == window.latestObjectID)
@@ -12346,6 +12351,7 @@ Tuio.Client = Tuio.Model.extend({
                 case menus[lang].objectAttributes [6]: return current.getRotationAccel(); break;
                 case menus[lang].objectAttributes [7]: return current.getXSpeed(); break;
                 case menus[lang].objectAttributes [8]: return current.getYSpeed(); break;
+                case menus[lang].objectAttributes [9]: return current.sessionId; break;
             }
         }
         else
@@ -12353,16 +12359,17 @@ Tuio.Client = Tuio.Model.extend({
     };
 	
 	
-	// the method defines the behavior of the tuio-state block. It returns whether the tuio-object with symboldID 'symbolID' is in the 
-	// state 'state'
-	// @ param: id --> the returned integer value of the block that is nested in the tuio-attribute-block. Should be a symboldID
+	// the method defines the behavior of the tuio-state block. It returns whether the tuio-object with symboldID 'id' is in the 
+	// state 'state' or the TUIO-Cursor is in the state 'state'
+	// @ param: id --> the returned integer value of the block that is nested in the tuio-attribute-block. Should be a symboldID or 
+    // the window.latestObjectID or the window.cursorID
 	// @param state --> the state that should be checked
-	ext.getStateOfTuioObject = function(symbolID, state) {
+	ext.getStateOfTuioObject = function(id, state) {
 		var current;
-		if(symbolID == window.latestObjectID)
+		if(id == window.latestObjectID)
             current = window.latestTuioObject;
         else
-            current = window.tuioObjects[symbolID];
+            current = window.tuioObjects[id];
 		if(typeof current !='undefined' && current !=null){
 			var currentStatus = current.getTuioState();
 			switch(state) {				
@@ -12396,7 +12403,7 @@ Tuio.Client = Tuio.Model.extend({
         var sessionTime =  Tuio.Time.getSessionTime();
         var currentTime = current.getTuioTime();
         var timeDifference = sessionTime.subtractTime(currentTime);
-        var value = (timeDifference.getSeconds() ==0 && timeDifference.getMicroseconds() <=50000);
+        var value = (timeDifference.getSeconds() ==0 && timeDifference.getMicroseconds() <=window.expiringMicroseconds);
         if(value){
             if(window.trueUpdateCount[id]) {
                 window.trueUpdateCount[id]++;
@@ -12446,9 +12453,10 @@ Tuio.Client = Tuio.Model.extend({
             ['h','when %n added' ,'addEventHatBlock',''],
             ['h','when %n removed','removeEventHatBlock',''],
             ['h','when any tuio object updated','updateOnAnyObject',''],
-            ['r','latest Tuio Object','getLatestTuioObject',''],
-            ['r','Tuio-Object with ID %n','tuioObject','1'],
-            ['r','Tuio-Cursor', 'tuioCursor', ''],
+            ['r','latest TUIO Object','getLatestTuioObject',''],
+            ['r','TUIO-Object with symbolID %n','tuioObject',''],
+            ['r','TUIO-Object with sessionID %n','tuioObjectSessionID',''],
+            ['r','TUIO-Cursor', 'tuioCursor', ''],
             ['r','attribute %m.objectAttributes of %n','getTuioAttribute',''],
             ['b', 'Is %n %m.objectStates ?', 'getStateOfTuioObject' , '']
         ],
@@ -12456,23 +12464,24 @@ Tuio.Client = Tuio.Model.extend({
 			['h','falls %n ein Update erhält','updateEventHatBlock',''],
             ['h','falls %n hinzugefügt wird' ,'addEventHatBlock',''],
             ['h','falls %n entfernt wird','removeEventHatBlock',''],
-            ['h','falls irgendein Tuio-Objekt geupdatet wird','updateOnAnyObject',''],
-            ['r','zuletzt verändertes Objekt mit ','getLatestTuioObject',''],
-            ['r','Tuio-Object mit der Nummer %n','tuioObject','1'],
-            ['r','Tuio-Zeiger', 'tuioCursor', ''],
+            ['h','falls irgendein TUIO-Objekt geupdatet wird','updateOnAnyObject',''],
+            ['r','zuletzt verändertes TUIO-Objekt ','getLatestTuioObject',''],
+            ['r','TUIO-Objekt mit der Symbolummer %n','tuioObject',''],
+            ['r','TUIO-Objekt mit der Sizungsnummer %n','tuioObjectSessionID',''],
+            ['r','TUIO-Zeiger', 'tuioCursor', ''],
             ['r','Attribut %m.objectAttributes von %n','getTuioAttribute',''],
-			['b', 'Status von  %n : %m.objectStates?', 'getStateOfTuioObject' , '']
+			['b', 'Ist %n %m.objectStates?', 'getStateOfTuioObject' , '']
 		]		
 	}
 	
 	var menus = {
 		en: {
-			objectAttributes: ['Position X', 'Position Y', 'Angle','Motion Speed', 'Motion Accel','Rotation Speed', 'Rotation Accel', 'xSpeed', 'ySpeed'],
+			objectAttributes: ['Position X', 'Position Y', 'Angle','Motion Speed', 'Motion Accel','Rotation Speed', 'Rotation Accel', 'xSpeed', 'ySpeed', 'sessionID'],
 			objectStates: ['moving','accelerating','decelerating','rotating']
 		},
 		de: {
-			objectAttributes: ['Position X', 'Position Y', 'Winkel','Bewegungsgeschwindigkeit', 'Bewegungsbeschleunigung','Drehgeschwindigkeit', 'Drehbeschleunigung', 'xGeschwindigkeit', 'xBeschleunigung'],
-			objectStates: ['Bewegt sich','Beschleunigt','Bremst','Dreht sich']
+			objectAttributes: ['Position X', 'Position Y', 'Winkel','Bewegungsgeschwindigkeit', 'Bewegungsbeschleunigung','Drehgeschwindigkeit', 'Drehbeschleunigung', 'xGeschwindigkeit', 'xBeschleunigung','Sitzungsnummer'],
+			objectStates: ['in Bewegung','am Beschleunigen','am Bremsen','am Drehen']
 		}
 	}
     // create descriptor for the Scratch flash app ---------------------------------------------------------------------
