@@ -12480,7 +12480,7 @@ Tuio.Client = Tuio.Model.extend({
 			objectStates: ['moving','accelerating','decelerating','rotating']
 		},
 		de: {
-			objectAttributes: ['Position X', 'Position Y', 'Winkel','Bewegungsgeschwindigkeit', 'Bewegungsbeschleunigung','Drehgeschwindigkeit', 'Drehbeschleunigung', 'xGeschwindigkeit', 'xBeschleunigung','Sitzungsnummer'],
+			objectAttributes: ['Position X', 'Position Y', 'Winkel','Bewegungsgeschwindigkeit', 'Bewegungsbeschleunigung','Drehgeschwindigkeit', 'Drehbeschleunigung', 'xGeschwindigkeit', 'yGeschwindigkeit','Sitzungsnummer'],
 			objectStates: ['in Bewegung','am Beschleunigen','am Bremsen','am Drehen']
 		}
 	}
@@ -12491,5 +12491,5 @@ Tuio.Client = Tuio.Model.extend({
     };
 
     // register the extension at the Scratch flash app -----------------------------------------------------------------
-    ScratchExtensions.register('TuioExtension', descriptor, ext);
+    ScratchExtensions.register('TUIO4Scratch', descriptor, ext);
 })({});
