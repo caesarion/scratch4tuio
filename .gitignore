@@ -1,5 +1,35 @@
-.sass-cache
-/scratch_extensions/browser_extension.js
+# Ignore docs files
+_gh_pages
+_site
+.ruby-version
+
+# Numerous always-ignore extensions
+*.diff
+*.err
+*.log
+*.orig
+*.rej
+*.swo
+*.swp
+*.vi
+*.zip
+*~
+
+# OS or Editor folders
+._*
+.cache
+.DS_Store
 .idea
-/scratch_extensions/src/sammelsurium.js
-/scratch_extensions/src/TuioClientConnection.js
+.project
+.settings
+.tmproj
+*.esproj
+*.sublime-project
+*.sublime-workspace
+nbproject
+Thumbs.db
+
+# Folders to ignore
+bower_components
+node_modules
+_tmp
