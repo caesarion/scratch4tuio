@@ -77,25 +77,13 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-compress');
 
     grunt.registerTask('sbx', 'Create .sbx file', function() {
+        var descr = grunt.file.readJSON('src/descriptor.json');
+
         var project = grunt.file.readJSON('build-support/sbx/project.json');
-        project.info.savedExtensions[0].extensionName = grunt.config('pkg.name');
-        project.info.savedExtensions[0].javascriptURL = grunt.config('pkg.homepage') + '/' + grunt.config('pkg.name') + '.min.js';
-        project.info.savedExtensions[0].blockSpecs = [
-            ['h', 'when %n updated', 'updateEventHatBlock', ''],
-            ['h', 'when %n added', 'addEventHatBlock', ''],
-            ['h', 'when %n removed', 'removeEventHatBlock', ''],
-            ['h', 'when any tuio object updated', 'updateOnAnyObject', ''],
-            ['r', 'latest TUIO Object', 'getLatestTuioObject', ''],
-            ['r', 'TUIO-Object with symbolID %n', 'tuioObject', ''],
-            ['r', 'TUIO-Object with sessionID %n', 'tuioObjectSessionID', ''],
-            ['r', 'TUIO-Cursor', 'tuioCursor', ''],
-            ['r', 'attribute %m.objectAttributes of %n', 'getTuioAttribute', ''],
-            ['b', 'Is %n %m.objectStates ?', 'getStateOfTuioObject', '']
-        ];
-        project.info.savedExtensions[0].menus = {
-			objectAttributes: ['Position X', 'Position Y', 'Winkel','Bewegungsgeschwindigkeit', 'Bewegungsbeschleunigung','Drehgeschwindigkeit', 'Drehbeschleunigung', 'xGeschwindigkeit', 'yGeschwindigkeit','Sitzungsnummer'],
-			objectStates: ['in Bewegung','am Beschleunigen','am Bremsen','am Drehen']
-		};
+        project.info.savedExtensions[0].extensionName = descr.title;
+        project.info.savedExtensions[0].javascriptURL = descr.script_url;
+        project.info.savedExtensions[0].blockSpecs = descr.blocks['en'];
+        project.info.savedExtensions[0].menus = descr.menus['en'];
 
         grunt.file.write('_tmp/project.json', JSON.stringify(project, null, 2));
 
