@@ -78,12 +78,12 @@ module.exports = function(grunt) {
 
         grunt.file.copy('build-support/sbx/0.png', '_tmp/0.png');
         grunt.file.copy('build-support/sbx/0.wav', '_tmp/0.wav');
-
-        grunt.task.run('compress:sbx');
-
+    });
+    
+    grunt.registerTask('sbx-clean', 'Clean temporary .sbx files.', function() {
         grunt.file.delete('_tmp');
     });
 
-    grunt.registerTask('default', ['browserify','uglify','sbx']);
+    grunt.registerTask('default', ['browserify','uglify','sbx','compress:sbx','sbx-clean']);
 
 };
