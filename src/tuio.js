@@ -2,7 +2,10 @@
  * http://fe9lix.github.com/Tuio.js/
  * Copyright (c) 2012 Felix Raab; Licensed GPL */
 
+var osc = require('../node_modules/osc/dist/osc-browser.js');
+
 (function(root) {
+
     // Initial Setup, events mixin and extend/inherits taken from Backbone.js
     // See Backbone.js source for original version and comments.
 
@@ -702,7 +705,7 @@ Tuio.Client = Tuio.Model.extend({
         this.currentTime = new Tuio.Time();
         this.currentTime.reset();
 
-        this.socket = io.connect(this.host);
+        this.socket = require('socket.io-client')(this.host);
         this.socket.on("connect", this.onConnect);
         this.socket.on("disconnect", this.onDisconnect);
     },
