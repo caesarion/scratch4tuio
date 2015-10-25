@@ -12,21 +12,21 @@ var osc = require('../node_modules/osc/dist/osc-browser.js');
     var previousTuio = root.Tuio;
 
     var slice = Array.prototype.slice;
-    var splice = Array.prototype.splice;
+    // var splice = Array.prototype.splice; // Never used
 
     var Tuio;
-    if (typeof exports !== "undefined") {
+    if (typeof exports !== 'undefined') {
         Tuio = exports;
     } else {
         Tuio = root.Tuio = {};
     }
 
-    Tuio.VERSION = "0.0.1";
+    Tuio.VERSION = '0.0.1';
 
     var _ = root._;
 
-    if (!_ && (typeof require !== "undefined")) {
-        _ = require("lodash");
+    if (!_ && (typeof require !== 'undefined')) {
+        _ = require('lodash');
     }
 
     Tuio.noConflict = function() {
@@ -79,7 +79,8 @@ var osc = require('../node_modules/osc/dist/osc-browser.js');
                 while ((node = node.next) !== tail) {
                     cb = node.callback;
                     ctx = node.context;
-                    if ((callback && cb !== callback) || (context && ctx !== context)) {
+                    if ((callback && cb !== callback) ||
+                            (context && ctx !== context)) {
                         this.on(event, cb, ctx);
                     }
                 }
@@ -123,7 +124,7 @@ var osc = require('../node_modules/osc/dist/osc-browser.js');
 
     _.extend(Model.prototype, Events);
 
-    var extend = function (protoProps, classProps) {
+    var extend = function(protoProps, classProps) {
         var child = inherits(this, protoProps, classProps);
         child.extend = this.extend;
         return child;
@@ -138,7 +139,7 @@ var osc = require('../node_modules/osc/dist/osc-browser.js');
     var inherits = function(parent, protoProps, staticProps) {
         var child;
 
-        if (protoProps && protoProps.hasOwnProperty("constructor")) {
+        if (protoProps && protoProps.hasOwnProperty('constructor')) {
             child = protoProps.constructor;
         } else {
             child = function() {
@@ -183,8 +184,8 @@ Tuio.Time = Tuio.Model.extend({
     },
 
     addTime: function(ttime) {
-        var sec = this.seconds + ttime.getSeconds(),
-            usec = this.microSeconds + ttime.getMicroseconds();
+        var sec = this.seconds + ttime.getSeconds();
+        var usec = this.microSeconds + ttime.getMicroseconds();
         sec += Math.floor(usec / 1000000);
         usec = usec % 1000000;
 
@@ -192,8 +193,8 @@ Tuio.Time = Tuio.Model.extend({
     },
 
     subtract: function(us) {
-        var sec = this.seconds - Math.floor(us / 1000000),
-            usec = this.microSeconds - us % 1000000;
+        var sec = this.seconds - Math.floor(us / 1000000);
+        var usec = this.microSeconds - us % 1000000;
 
         if (usec < 0) {
             usec += 1000000;
@@ -204,8 +205,8 @@ Tuio.Time = Tuio.Model.extend({
     },
 
     subtractTime: function(ttime) {
-        var sec = this.seconds - ttime.getSeconds(),
-            usec = this.microSeconds - ttime.getMicroseconds();
+        var sec = this.seconds - ttime.getSeconds();
+        var usec = this.microSeconds - ttime.getMicroseconds();
 
         if (usec < 0) {
             usec += 1000000;
@@ -291,14 +292,15 @@ Tuio.Point = Tuio.Model.extend({
     initialize: function(params) {
         this.xPos = params.xp || 0;
         this.yPos = params.yp || 0;
-        this.currentTime = Tuio.Time.fromTime(params.ttime || Tuio.Time.getSessionTime());
+        this.currentTime = Tuio.Time.fromTime(params.ttime ||
+                Tuio.Time.getSessionTime());
         this.startTime = Tuio.Time.fromTime(this.currentTime);
     },
 
     update: function(params) {
         this.xPos = params.xp;
         this.yPos = params.yp;
-        if (params.hasOwnProperty("ttime")) {
+        if (params.hasOwnProperty('ttime')) {
             this.currentTime = Tuio.Time.fromTime(params.ttime);
         }
     },
@@ -317,8 +319,8 @@ Tuio.Point = Tuio.Model.extend({
     },
 
     getDistance: function(xp, yp) {
-        var dx = this.xPos - xp,
-            dy = this.yPos - yp;
+        var dx = this.xPos - xp;
+        var dy = this.yPos - yp;
         return Math.sqrt(dx * dx + dy * dy);
     },
 
@@ -327,10 +329,10 @@ Tuio.Point = Tuio.Model.extend({
     },
 
     getAngle: function(xp, yp) {
-        var side = this.xPos - xp,
-            height = this.yPos - yp,
-            distance = this.getDistance(xp, yp),
-            angle = Math.asin(side / distance) + Math.PI / 2;
+        var side = this.xPos - xp;
+        var height = this.yPos - yp;
+        var distance = this.getDistance(xp, yp);
+        var angle = Math.asin(side / distance) + Math.PI / 2;
 
         if (height < 0) {
             angle = 2 * Math.PI - angle;
@@ -404,21 +406,24 @@ Tuio.Container = Tuio.Point.extend({
         Tuio.Point.prototype.update.call(this, params);
 
         if (
-            params.hasOwnProperty("xs") &&
-            params.hasOwnProperty("ys") &&
-            params.hasOwnProperty("ma")) {
+            params.hasOwnProperty('xs') &&
+            params.hasOwnProperty('ys') &&
+            params.hasOwnProperty('ma')) {
 
             this.xSpeed = params.xs;
             this.ySpeed = params.ys;
-            this.motionSpeed = Math.sqrt(this.xSpeed * this.xSpeed + this.ySpeed * this.ySpeed);
+            this.motionSpeed = Math.sqrt(this.xSpeed * this.xSpeed +
+                    this.ySpeed * this.ySpeed);
             this.motionAccel = params.ma;
         } else {
-            var diffTime = this.currentTime.subtractTime(lastPoint.getTuioTime()),
-                dt = diffTime.getTotalMilliseconds() / 1000,
-                dx = this.xPos - lastPoint.getX(),
-                dy = this.yPos - lastPoint.getY(),
-                dist = Math.sqrt(dx * dx + dy * dy),
-                lastMotionSpeed = this.motionSpeed;
+            var diffTime = this.currentTime.subtractTime(
+                    lastPoint.getTuioTime()
+                );
+            var dt = diffTime.getTotalMilliseconds() / 1000;
+            var dx = this.xPos - lastPoint.getX();
+            var dy = this.yPos - lastPoint.getY();
+            var dist = Math.sqrt(dx * dx + dy * dy);
+            var lastMotionSpeed = this.motionSpeed;
 
             this.xSpeed = dx / dt;
             this.ySpeed = dy / dt;
@@ -566,17 +571,19 @@ Tuio.Object = Tuio.Container.extend({
         Tuio.Container.prototype.update.call(this, params);
 
         if (
-            params.hasOwnProperty("rs") &&
-            params.hasOwnProperty("ra")) {
+            params.hasOwnProperty('rs') &&
+            params.hasOwnProperty('ra')) {
 
             this.angle = params.a;
             this.rotationSpeed = params.rs;
             this.rotationAccel = params.ra;
         } else {
-            var diffTime = this.currentTime.subtractTime(lastPoint.getTuioTime()),
-                dt = diffTime.getTotalMilliseconds() / 1000,
-                lastAngle = this.angle,
-                lastRotationSpeed = this.rotationSpeed;
+            var diffTime = this.currentTime.subtractTime(
+                    lastPoint.getTuioTime()
+                );
+            var dt = diffTime.getTotalMilliseconds() / 1000;
+            var lastAngle = this.angle;
+            var lastRotationSpeed = this.rotationSpeed;
             this.angle = params.a;
 
             var da = (this.angle - lastAngle) / (2 * Math.PI);
@@ -606,7 +613,7 @@ Tuio.Object = Tuio.Container.extend({
     updateObjectState: function() {
         // actual line:
         // if ((this.rotationAccel !== 0)&& (this.state !== Tuio.Object.TUIO_STOPPED) )
-        if ((this.rotationAccel !== 0) ) {
+        if ((this.rotationAccel !== 0)) {
             this.state = Tuio.Object.TUIO_ROTATING;
         }
     },
@@ -697,7 +704,7 @@ Tuio.Client = Tuio.Model.extend({
         this.currentFrame = 0;
         this.currentTime = null;
 
-        _.bindAll(this, "onConnect", "acceptBundle", "onDisconnect");
+        _.bindAll(this, 'onConnect', 'acceptBundle', 'onDisconnect');
     },
 
     connect: function() {
@@ -706,25 +713,25 @@ Tuio.Client = Tuio.Model.extend({
         this.currentTime.reset();
 
         this.socket = require('socket.io-client')(this.host);
-        this.socket.on("connect", this.onConnect);
-        this.socket.on("disconnect", this.onDisconnect);
+        this.socket.on('connect', this.onConnect);
+        this.socket.on('disconnect', this.onDisconnect);
     },
 
-    disconnect: function(){
+    disconnect: function() {
         this.socket.disconnect();
     },
-    onConnect: function() {
-        this.socket.on("osc", this.acceptBundle);
-        console.log("connection established");
-        this.connected = true;
-        this.trigger("connect");
-    },
 
+    onConnect: function() {
+        this.socket.on('osc', this.acceptBundle);
+        console.log('connection established');
+        this.connected = true;
+        this.trigger('connect');
+    },
 
     onDisconnect: function() {
         this.connected = false;
-        console.log("connection lost");
-        this.trigger("disconnect");
+        console.log('connection lost');
+        this.trigger('disconnect');
     },
 
     isConnected: function() {
@@ -749,21 +756,26 @@ Tuio.Client = Tuio.Model.extend({
 
     // decompose the TUIO-Bundel
     acceptBundle: function(oscBundle) {
-        var bundle = osc.readPacket(oscBundle.data,{},oscBundle.offset, oscBundle.length);
+        var bundle = osc.readPacket(
+                oscBundle.data,
+                {},
+                oscBundle.offset,
+                oscBundle.length
+            );
 
         var packets = bundle.packets;
 
-        for(var i = 0, max = packets.length;i<max;i++) {
+        for (var i = 0, max = packets.length; i < max; i++) {
             var packet = packets[i];
-            switch(packet.address) {
+            switch (packet.address) {
                 // only these profiles are currently possible
-                case "/tuio/2Dobj":
-                case "/tuio/2Dcur":
+                case '/tuio/2Dobj':
+                case '/tuio/2Dcur':
                     this.acceptMessage(packet);
                     break;
                 // blobs not yet implemented.
-                case "/tuio/2Dblb":
-                    console.log("Blog received");
+                case '/tuio/2Dblb':
+                    console.log('Blog received');
                     break;
             }
         }
@@ -771,15 +783,15 @@ Tuio.Client = Tuio.Model.extend({
     },
 
     acceptMessage: function(oscMessage) {
-        var address = oscMessage.address,
-            command = oscMessage.args[0],
-            args = oscMessage.args.slice(1, oscMessage.length);
+        var address = oscMessage.address;
+        var command = oscMessage.args[0];
+        var args = oscMessage.args.slice(1, oscMessage.length);
         // distinguish between TUIO-Objects and TUIO-Cursors
         switch (address) {
-            case "/tuio/2Dobj":
+            case '/tuio/2Dobj':
                 this.handleObjectMessage(command, args);
                 break;
-            case "/tuio/2Dcur":
+            case '/tuio/2Dcur':
                 this.handleCursorMessage(command, args);
                 break;
         }
@@ -788,13 +800,13 @@ Tuio.Client = Tuio.Model.extend({
     handleObjectMessage: function(command, args) {
         // distinguish between the message types
         switch (command) {
-            case "set":
+            case 'set':
                 this.objectSet(args);
                 break;
-            case "alive":
+            case 'alive':
                 this.objectAlive(args);
                 break;
-            case "fseq":
+            case 'fseq':
                 this.objectFseq(args);
                 break;
         }
@@ -803,13 +815,13 @@ Tuio.Client = Tuio.Model.extend({
     handleCursorMessage: function(command, args) {
         // distinguish between the message types
         switch (command) {
-            case "set":
+            case 'set':
                 this.cursorSet(args);
                 break;
-            case "alive":
+            case 'alive':
                 this.cursorAlive(args);
                 break;
-            case "fseq":
+            case 'fseq':
                 this.cursorFseq(args);
                 break;
         }
@@ -817,16 +829,16 @@ Tuio.Client = Tuio.Model.extend({
 
     // updates the values of a TUIO-Object
     objectSet: function(args) {
-        var sid = args[0],
-            cid = args[1],
-            xPos = args[2],
-            yPos = args[3],
-            angle = args[4],
-            xSpeed = args[5],
-            ySpeed = args[6],
-            rSpeed = args[7],
-            mAccel = args[8],
-            rAccel = args[9];
+        var sid = args[0];
+        var cid = args[1];
+        var xPos = args[2];
+        var yPos = args[3];
+        var angle = args[4];
+        var xSpeed = args[5];
+        var ySpeed = args[6];
+        var rSpeed = args[7];
+        var mAccel = args[8];
+        var rAccel = args[9];
 
         if (!_.has(this.objectList, sid)) {
             var addObject = new Tuio.Object({
@@ -878,7 +890,10 @@ Tuio.Client = Tuio.Model.extend({
     objectAlive: function(args) {
         var removeObject = null;
         this.newObjectList = args;
-        this.aliveObjectList = _.difference(this.aliveObjectList, this.newObjectList);
+        this.aliveObjectList = _.difference(
+                this.aliveObjectList,
+                this.newObjectList
+            );
 
         for (var i = 0, max = this.aliveObjectList.length; i < max; i++) {
             removeObject = this.objectList[this.aliveObjectList[i]];
@@ -891,20 +906,23 @@ Tuio.Client = Tuio.Model.extend({
 
     // check if the bundle was too late. If not, trigger events to eventlistener (e.g. the ExtensionObject in this case)
     objectFseq: function(args) {
-        var fseq = args[0],
-            lateFrame = false,
-            tobj = null;
+        var fseq = args[0];
+        var lateFrame = false;
+        var tobj = null;
 
         if (fseq > 0) {
             if (fseq > this.currentFrame) {
                 this.currentTime = Tuio.Time.getSessionTime();
             }
-            if ((fseq >= this.currentFrame) || ((this.currentFrame - fseq) > 100)) {
+            if ((fseq >= this.currentFrame) ||
+                    ((this.currentFrame - fseq) > 100)) {
                 this.currentFrame = fseq;
             } else {
                 lateFrame = true;
             }
-        } else if (Tuio.Time.getSessionTime().subtractTime(this.currentTime).getTotalMilliseconds() > 100) {
+        } else if (Tuio.Time.getSessionTime()
+                .subtractTime(this.currentTime)
+                .getTotalMilliseconds() > 100) {
             this.currentTime = Tuio.Time.getSessionTime();
         }
 
@@ -924,7 +942,7 @@ Tuio.Client = Tuio.Model.extend({
                 }
             }
 
-            this.trigger("refresh", Tuio.Time.fromTime(this.currentTime));
+            this.trigger('refresh', Tuio.Time.fromTime(this.currentTime));
 
             var buffer = this.aliveObjectList;
             this.aliveObjectList = this.newObjectList;
@@ -937,7 +955,7 @@ Tuio.Client = Tuio.Model.extend({
     objectRemoved: function(tobj) {
         var removeObject = tobj;
         removeObject.remove(this.currentTime);
-        this.trigger("removeTuioObject", removeObject);
+        this.trigger('removeTuioObject', removeObject);
         delete this.objectList[removeObject.getSessionId()];
     },
     //trigger add events to eventlistener (e.g. the ExtensionObject in this case)
@@ -951,10 +969,10 @@ Tuio.Client = Tuio.Model.extend({
             a: tobj.getAngle()
         });
         this.objectList[addObject.getSessionId()] = addObject;
-        this.trigger("addTuioObject", addObject);
+        this.trigger('addTuioObject', addObject);
     },
-//trigger update events to eventlistener (e.g. the ExtensionObject in this case)
-// but only if the TUIO-Object really changed its state
+    //trigger update events to eventlistener (e.g. the ExtensionObject in this case)
+    // but only if the TUIO-Object really changed its state
     objectDefault: function(tobj) {
         var updateObject = this.objectList[tobj.getSessionId()];
         if (
@@ -981,16 +999,16 @@ Tuio.Client = Tuio.Model.extend({
             });
         }
 
-        this.trigger("updateTuioObject", updateObject);
+        this.trigger('updateTuioObject', updateObject);
     },
     // update the values of a cursor. check if add event occured
     cursorSet: function(args) {
-        var sid = args[0],
-            xPos = args[1],
-            yPos = args[2],
-            xSpeed = args[3],
-            ySpeed = args[4],
-            mAccel = args[5];
+        var sid = args[0];
+        var xPos = args[1];
+        var yPos = args[2];
+        var xSpeed = args[3];
+        var ySpeed = args[4];
+        var mAccel = args[5];
         // check if add event occured
         if (!_.has(this.cursorList, sid)) {
             var addCursor = new Tuio.Cursor({
@@ -1034,7 +1052,8 @@ Tuio.Client = Tuio.Model.extend({
         var removeCursor = null;
         this.newCursorList = args;
         // compute living cursors
-        this.aliveCursorList = _.difference(this.aliveCursorList, this.newCursorList);
+        this.aliveCursorList = _.difference(this.aliveCursorList,
+                this.newCursorList);
 
         for (var i = 0, max = this.aliveCursorList.length; i < max; i++) {
             // determine remove events
@@ -1047,20 +1066,23 @@ Tuio.Client = Tuio.Model.extend({
     },
     // check currency of bundle. If it was not too late, trigger event to eventlistener (e.g. ScratchExtension Objekt)
     cursorFseq: function(args) {
-        var fseq = args[0],
-            lateFrame = false,
-            tcur = null;
+        var fseq = args[0];
+        var lateFrame = false;
+        var tcur = null;
         // check with the frequence id whether the package is current or not
         if (fseq > 0) {
             if (fseq > this.currentFrame) {
                 this.currentTime = Tuio.Time.getSessionTime();
             }
-            if ((fseq >= this.currentFrame) || ((this.currentFrame - fseq) > 100)) {
+            if ((fseq >= this.currentFrame) ||
+                    ((this.currentFrame - fseq) > 100)) {
                 this.currentFrame = fseq;
             } else {
                 lateFrame = true;
             }
-        } else if (Tuio.Time.getSessionTime().subtractTime(this.currentTime).getTotalMilliseconds() > 100) {
+        } else if (Tuio.Time.getSessionTime()
+                .subtractTime(this.currentTime)
+                .getTotalMilliseconds() > 100) {
             this.currentTime = Tuio.Time.getSessionTime();
         }
 
@@ -1081,7 +1103,7 @@ Tuio.Client = Tuio.Model.extend({
                 }
             }
 
-            this.trigger("refresh", Tuio.Time.fromTime(this.currentTime));
+            this.trigger('refresh', Tuio.Time.fromTime(this.currentTime));
 
             var buffer = this.aliveCursorList;
             this.aliveCursorList = this.newCursorList;
@@ -1095,7 +1117,7 @@ Tuio.Client = Tuio.Model.extend({
         var removeCursor = tcur;
         removeCursor.remove(this.currentTime);
 
-        this.trigger("removeTuioCursor", removeCursor);
+        this.trigger('removeTuioCursor', removeCursor);
 
         delete this.cursorList[removeCursor.getSessionId()];
 
@@ -1109,9 +1131,11 @@ Tuio.Client = Tuio.Model.extend({
                     this.maxCursorId = maxCursor.getCursorId();
                 }
 
-                this.freeCursorList = _.without(this.freeCursorList, function(cur) {
-                    return cur.getCursorId() >= this.maxCursorId;
-                });
+                this.freeCursorList = _.without(this.freeCursorList,
+                        function(cur) {
+                            return cur.getCursorId() >= this.maxCursorId;
+                        }
+                    );
             } else {
                 this.freeCursorList = [];
             }
@@ -1121,14 +1145,15 @@ Tuio.Client = Tuio.Model.extend({
     },
     // trigger add event for cursor to eventlistener (e.g. ScratchExtension Objekt)
     cursorAdded: function(tcur) {
-        var cid = _.size(this.cursorList),
-            testCursor = null;
+        var cid = _.size(this.cursorList);
+        var testCursor = null;
 
         if ((cid <= this.maxCursorId) && (this.freeCursorList.length > 0)) {
             var closestCursor = this.freeCursorList[0];
             for (var i = 0, max = this.freeCursorList.length; i < max; i++) {
                 testCursor = this.freeCursorList[i];
-                if (testCursor.getDistanceToPoint(tcur) < closestCursor.getDistanceToPoint(tcur)) {
+                if (testCursor.getDistanceToPoint(tcur) <
+                        closestCursor.getDistanceToPoint(tcur)) {
                     closestCursor = testCursor;
                 }
             }
@@ -1149,7 +1174,7 @@ Tuio.Client = Tuio.Model.extend({
         });
         this.cursorList[addCursor.getSessionId()] = addCursor;
 
-        this.trigger("addTuioCursor", addCursor);
+        this.trigger('addTuioCursor', addCursor);
     },
     // trigger update event for cursor to eventlistener (e.g. ScratchExtension Objekt)
     cursorDefault: function(tcur) {
@@ -1176,6 +1201,6 @@ Tuio.Client = Tuio.Model.extend({
             });
         }
 
-        this.trigger("updateTuioCursor", updateCursor);
+        this.trigger('updateTuioCursor', updateCursor);
     }
 });

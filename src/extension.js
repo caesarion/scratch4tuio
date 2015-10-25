@@ -1,6 +1,6 @@
 // initialize tuio client ------------------------------------------------------------------------------------------
 if (typeof window.extensionWasLoaded == 'undefined') {
-    var tuio = require('./tuio.js');
+    require('./tuio.js');
 
     // make sure intitilalization is done only once!
     window.extensionWasLoaded = true;
@@ -30,55 +30,54 @@ if (typeof window.extensionWasLoaded == 'undefined') {
 
     // init socket.io client on port 5000 --------------------------------------------------------------------------
     window.client = new Tuio.Client({
-        host: "http://localhost:5000"
-    }),
+        host: 'http://localhost:5000'
+    });
 
     // set the behavior of what should happen when a certain event occurs: -------------------------------------
 
-    onAddTuioCursor = function(addCursor) {
+    var onAddTuioCursor = function(/*addCursor*/) {
         window.add[window.cursorID] = true;
         window.remove[window.cursorID] = null;
-    },
+    };
 
-    onUpdateTuioCursor = function(updateCursor) {
+    var onUpdateTuioCursor = function(updateCursor) {
         window.tuioObjects[window.cursorID] = updateCursor;
-    },
+    };
 
-    onRemoveTuioCursor = function(removeCursor) {
+    var onRemoveTuioCursor = function(removeCursor) {
         window.remove[window.cursorID] = removeCursor;
-    },
+    };
 
-    onAddTuioObject = function(addObject) {
+    var onAddTuioObject = function(addObject) {
         window.add[addObject.symbolId] = true;
         window.remove[addObject.symbolId] = null;
         window.tuioObjects[addObject.symbolId] = addObject;
-    },
+    };
 
-    onUpdateTuioObject = function(updateObject) {
+    var onUpdateTuioObject = function(updateObject) {
         window.tuioObjects[updateObject.symbolId] = updateObject;
         window.tuioObjects[-updateObject.sessionId] = updateObject;
         window.latestTuioObject = updateObject;
-    },
+    };
 
-    onRemoveTuioObject = function(removeObject) {
+    var onRemoveTuioObject = function(removeObject) {
         window.remove[removeObject.symbolId] = removeObject;
         window.add[removeObject.symbolId] = null;
         window.tuioObjects[removeObject.symbolId] = null;
         window.tuioObjects[-removeObject.sessionId] = null;
-    },
+    };
 
-    onRefresh = function(time) {
-
+    var onRefresh = function(/*time*/) {
     };
 
     // bind the defined behavior to the events: --------------------------------------------------------------
-    window.client.on("addTuioCursor", onAddTuioCursor);
-    window.client.on("updateTuioCursor", onUpdateTuioCursor);
-    window.client.on("removeTuioCursor", onRemoveTuioCursor);
-    window.client.on("addTuioObject", onAddTuioObject);
-    window.client.on("updateTuioObject", onUpdateTuioObject);
-    window.client.on("removeTuioObject", onRemoveTuioObject);
-    window.client.on("refresh", onRefresh);
+    window.client.on('addTuioCursor', onAddTuioCursor);
+    window.client.on('updateTuioCursor', onUpdateTuioCursor);
+    window.client.on('removeTuioCursor', onRemoveTuioCursor);
+    window.client.on('addTuioObject', onAddTuioObject);
+    window.client.on('updateTuioObject', onUpdateTuioObject);
+    window.client.on('removeTuioObject', onRemoveTuioObject);
+    window.client.on('refresh', onRefresh);
 
     // try to connect the client to the helper-application server:
     // if there is no connection possible, the event based socket.io client assures to reconnect as soon as
@@ -87,7 +86,8 @@ if (typeof window.extensionWasLoaded == 'undefined') {
 
     // define helper functions that work on the input of the blocks ----------------------------------------
     window.checkID = function(id) {
-        return ((id == window.cursorID || (id > 0 && id < 88)) && (!isNaN(id) && (function(x) {
+        return ((id == window.cursorID || (id > 0 && id < 88)) &&
+                (!isNaN(id) && (function(x) {
             return (x | 0) === x;
         })(parseFloat(id))));
     };
@@ -120,13 +120,15 @@ module.exports = {
             return false;
         }
         var current = window.tuioObjects[id];
-        if (typeof current == 'undefined' || current == null)
+        if (typeof current == 'undefined' || current == null) {
             return false;
+        }
         // compare the times of the received Update with the current time
         var sessionTime = Tuio.Time.getSessionTime();
         var currentTime = current.getTuioTime();
-        var timeDifference = sessionTime.subtractTime(currentTime);
-        var value = (timeDifference.getSeconds() == 0 && timeDifference.getMicroseconds() <= window.expiringMicroseconds);
+        var timeDiff = sessionTime.subtractTime(currentTime);
+        var value = (timeDiff.getSeconds() === 0 &&
+                timeDiff.getMicroseconds() <= window.expiringMicroseconds);
         if (value) {
             // this mechanism is necessary due to the fact that hat blocks only fire when an up flank is received.
             // This mechanism creates this flank
@@ -143,22 +145,25 @@ module.exports = {
     // this method defines the behavior of the add-event-hat-block. It is continuously executed by the scratch-flash-app, for every instantiated add-hat-block.
     // @param: id --> the symbolID of the object that should be checked for addings.
     addEventHatBlock: function(id) {
-        if (window.checkID(id) == true) {
-            if (window.add[id] == true) {
+        if (window.checkID(id) === true) {
+            if (window.add[id] === true) {
                 window.add[id] = false;
                 return true;
-            } else
+            } else {
                 return false;
-        } else
+            }
+        } else {
             return false;
+        }
     },
 
     // this method defines the behavior of the remove-event-hat-block. It is continuously executed by the scratch-flash-app, for every instantiated remove-hat-block.
     // @param: id --> the symbolID of the object that should be checked for removals.
     removeEventHatBlock: function(id) {
         var current = window.remove[id];
-        if (typeof current == 'undefined' || current == null)
+        if (typeof current == 'undefined' || current == null) {
             return false;
+        }
         var currentStatus = current.getTuioState();
 
         return currentStatus == Tuio.Container.TUIO_REMOVED;
@@ -190,48 +195,41 @@ module.exports = {
     getTuioAttribute: function(attributeName, id) {
         var current;
         // decode the id
-        if (id == window.latestObjectID)
+        if (id == window.latestObjectID) {
             current = window.latestTuioObject;
-        else
+        } else {
             current = window.tuioObjects[id];
-        if (typeof current != 'undefined' && current != null) {
-            // switch between the selecte menu entry and return accordinglys
-            switch (attributeName) {
-                case menus[lang].objectAttributes[0]: // case PosX
-                    return window.convertXToScratchCoordinate(current.getX());
-                    break;
-                case menus[lang].objectAttributes[1]: // case PosY
-                    return window.convertYToScratchCoordinate(current.getY());
-                    break;
-                case menus[lang].objectAttributes[2]:
-                    return current.getAngleDegrees();
-                    break;
-                case menus[lang].objectAttributes[3]:
-                    return current.getMotionSpeed();
-                    break;
-                case menus[lang].objectAttributes[4]:
-                    return current.getMotionAccel();
-                    break;
-                case menus[lang].objectAttributes[5]:
-                    return current.getRotationSpeed();
-                    break;
-                case menus[lang].objectAttributes[6]:
-                    return current.getRotationAccel();
-                    break;
-                case menus[lang].objectAttributes[7]:
-                    return current.getXSpeed();
-                    break;
-                case menus[lang].objectAttributes[8]:
-                    return current.getYSpeed();
-                    break;
-                case menus[lang].objectAttributes[9]:
-                    return current.sessionId;
-                    break;
-            }
-        } else
-            return 'ERROR: No object with ' + id + " on camera!";
-    },
+        }
 
+        var menus = this.descriptor.menus;
+        if (typeof current != 'undefined' && current != null) {
+            // switch between the selecte menu entry and return accordingly
+            switch (attributeName) {
+                case menus.objectAttributes[0]: // case PosX
+                    return window.convertXToScratchCoordinate(current.getX());
+                case menus.objectAttributes[1]: // case PosY
+                    return window.convertYToScratchCoordinate(current.getY());
+                case menus.objectAttributes[2]:
+                    return current.getAngleDegrees();
+                case menus.objectAttributes[3]:
+                    return current.getMotionSpeed();
+                case menus.objectAttributes[4]:
+                    return current.getMotionAccel();
+                case menus.objectAttributes[5]:
+                    return current.getRotationSpeed();
+                case menus.objectAttributes[6]:
+                    return current.getRotationAccel();
+                case menus.objectAttributes[7]:
+                    return current.getXSpeed();
+                case menus.objectAttributes[8]:
+                    return current.getYSpeed();
+                case menus.objectAttributes[9]:
+                    return current.sessionId;
+            }
+        } else {
+            return 'ERROR: No object with ' + id + ' on camera!';
+        }
+    },
 
     // the method defines the behavior of the tuio-state block. It returns whether the tuio-object with symboldID 'id' is in the
     // state 'state' or the TUIO-Cursor is in the state 'state'
@@ -241,31 +239,31 @@ module.exports = {
     getStateOfTuioObject: function(id, state) {
         var current;
         // decode the id
-        if (id == window.latestObjectID)
+        if (id == window.latestObjectID) {
             current = window.latestTuioObject;
-        else
+        } else {
             current = window.tuioObjects[id];
+        }
         if (typeof current != 'undefined' && current != null) {
+            var menus = this.descriptor.menus;
             var currentStatus = current.getTuioState();
             switch (state) {
                 // switch between the selecte menu entry and return accordinglys
-                case menus[lang].objectStates[0]: // case Moving
-                    return ((currentStatus === Tuio.Object.TUIO_ACCELERATING) || (currentStatus === Tuio.Object.TUIO_DECELERATING) || (currentStatus === Tuio.Object.TUIO_ROTATING));;
-                    break;
-                case menus[lang].objectStates[1]: // case Accelerating
+                case menus.objectStates[0]: // case Moving
+                    return ((currentStatus === Tuio.Object.TUIO_ACCELERATING) ||
+                            (currentStatus === Tuio.Object.TUIO_DECELERATING) ||
+                            (currentStatus === Tuio.Object.TUIO_ROTATING));
+                case menus.objectStates[1]: // case Accelerating
                     return currentStatus == Tuio.Object.TUIO_ACCELERATING;
-                    break;
-                case menus[lang].objectStates[2]: // case Decelerating
+                case menus.objectStates[2]: // case Decelerating
                     return currentStatus == Tuio.Object.TUIO_DECELERATING;
-                    break;
-                case menus[lang].objectStates[3]: // case Rotating
+                case menus.objectStates[3]: // case Rotating
                     return currentStatus == Tuio.Object.TUIO_ROTATING;
-                    break;
             }
-        } else
-            return 'ERROR: No object with ' + id + " on camera!";
+        } else {
+            return 'ERROR: No object with ' + id + ' on camera!';
+        }
     },
-
 
     // this method defines the behavior of the 'updateOnAny'-hat-block. The hat block executes its command stack, if and only if
     // there was an update on any tuio object within the last 50 ms
@@ -276,13 +274,15 @@ module.exports = {
             return false;
         }
         var current = window.latestTuioObject;
-        if (typeof current == 'undefined' || current == null)
+        if (typeof current == 'undefined' || current == null) {
             return false;
+        }
         // compare the times of the received Update with the current time
         var sessionTime = Tuio.Time.getSessionTime();
         var currentTime = current.getTuioTime();
-        var timeDifference = sessionTime.subtractTime(currentTime);
-        var value = (timeDifference.getSeconds() == 0 && timeDifference.getMicroseconds() <= window.expiringMicroseconds);
+        var timeDiff = sessionTime.subtractTime(currentTime);
+        var value = (timeDiff.getSeconds() === 0 &&
+                timeDiff.getMicroseconds() <= window.expiringMicroseconds);
         if (value) {
             // this mechanism is necessary due to the fact that hat blocks only fire when an up flank is received.
             // This mechanism creates this flank
@@ -316,4 +316,4 @@ module.exports = {
             msg: 'Ready'
         };
     }
-}
+};
