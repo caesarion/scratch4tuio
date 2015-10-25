@@ -1,92 +1,95 @@
 // initialize tuio client ------------------------------------------------------------------------------------------
 if (typeof window.extensionWasLoaded == 'undefined') {
-    require('./tuio.js');
-
     // make sure intitilalization is done only once!
     window.extensionWasLoaded = true;
+}
+// end client initialisation ---------------------------------------------------------------------------------------
+
+module.exports = (function() {
+    require('./tuio.js');
 
     // list of all tuio tuio objects that were updated, added or removed
-    window.tuioObjects = [];
+    var tuioObjects = [];
 
     // list of counters that holds for every symbol-id the update count
     // the counters are used to return false after the update-hat-block returned true two times.
     // Necessary for the continous execution of the update-hat-block's program stack.
-    window.trueUpdateCount = [];
+    var trueUpdateCount = [];
 
     // set specific ID's -------------------------------------------------------------------------------------------
-    window.cursorID = 0;
-    window.latestObjectID = 1000;
+    var cursorID = 0;
+    var latestObjectID = 1000;
 
     // list of boolean values that denote whether an object with a certain symbol-id was removed
-    window.remove = [];
+    var remove = [];
     // list of boolean values that denote whether an object with a certain symbol-id was added
-    window.add = [];
+    var add = [];
 
     // references the latest tuio-object. Needed for the 'latest Tuio Object' block.
-    window.latestTuioObject = null;
+    var latestTuioObject = null;
 
     // the microseconds until an event expires (e.g. is not used any more)
-    window.expiringMicroseconds = 50000;
+    var expiringMicroseconds = 50000;
 
     // init socket.io client on port 5000 --------------------------------------------------------------------------
-    window.client = new Tuio.Client({
+    var client = new Tuio.Client({
         host: 'http://localhost:5000'
     });
 
     // set the behavior of what should happen when a certain event occurs: -------------------------------------
 
     var onAddTuioCursor = function(/*addCursor*/) {
-        window.add[window.cursorID] = true;
-        window.remove[window.cursorID] = null;
+        add[cursorID] = true;
+        remove[cursorID] = null;
     };
 
     var onUpdateTuioCursor = function(updateCursor) {
-        window.tuioObjects[window.cursorID] = updateCursor;
+        tuioObjects[cursorID] = updateCursor;
     };
 
     var onRemoveTuioCursor = function(removeCursor) {
-        window.remove[window.cursorID] = removeCursor;
+        remove[cursorID] = removeCursor;
     };
 
     var onAddTuioObject = function(addObject) {
-        window.add[addObject.symbolId] = true;
-        window.remove[addObject.symbolId] = null;
-        window.tuioObjects[addObject.symbolId] = addObject;
+        add[addObject.symbolId] = true;
+        remove[addObject.symbolId] = null;
+        tuioObjects[addObject.symbolId] = addObject;
     };
 
     var onUpdateTuioObject = function(updateObject) {
-        window.tuioObjects[updateObject.symbolId] = updateObject;
-        window.tuioObjects[-updateObject.sessionId] = updateObject;
-        window.latestTuioObject = updateObject;
+        tuioObjects[updateObject.symbolId] = updateObject;
+        tuioObjects[-updateObject.sessionId] = updateObject;
+        latestTuioObject = updateObject;
     };
 
     var onRemoveTuioObject = function(removeObject) {
-        window.remove[removeObject.symbolId] = removeObject;
-        window.add[removeObject.symbolId] = null;
-        window.tuioObjects[removeObject.symbolId] = null;
-        window.tuioObjects[-removeObject.sessionId] = null;
+        remove[removeObject.symbolId] = removeObject;
+        add[removeObject.symbolId] = null;
+        tuioObjects[removeObject.symbolId] = null;
+        tuioObjects[-removeObject.sessionId] = null;
     };
 
     var onRefresh = function(/*time*/) {
     };
 
     // bind the defined behavior to the events: --------------------------------------------------------------
-    window.client.on('addTuioCursor', onAddTuioCursor);
-    window.client.on('updateTuioCursor', onUpdateTuioCursor);
-    window.client.on('removeTuioCursor', onRemoveTuioCursor);
-    window.client.on('addTuioObject', onAddTuioObject);
-    window.client.on('updateTuioObject', onUpdateTuioObject);
-    window.client.on('removeTuioObject', onRemoveTuioObject);
-    window.client.on('refresh', onRefresh);
+    client.on('addTuioCursor', onAddTuioCursor);
+    client.on('updateTuioCursor', onUpdateTuioCursor);
+    client.on('removeTuioCursor', onRemoveTuioCursor);
+    client.on('addTuioObject', onAddTuioObject);
+    client.on('updateTuioObject', onUpdateTuioObject);
+    client.on('removeTuioObject', onRemoveTuioObject);
+    client.on('refresh', onRefresh);
 
     // try to connect the client to the helper-application server:
     // if there is no connection possible, the event based socket.io client assures to reconnect as soon as
     // the server is available
-    window.client.connect();
+    client.connect();
 
     // define helper functions that work on the input of the blocks ----------------------------------------
-    window.checkID = function(id) {
-        return ((id == window.cursorID || (id > 0 && id < 88)) &&
+    var checkID = function(id) {
+        return ((id == cursorID || (id > 0 && id < 88)) &&
                 (!isNaN(id) && (function(x) {
             return (x | 0) === x;
         })(parseFloat(id))));
@@ -95,225 +98,228 @@ if (typeof window.extensionWasLoaded == 'undefined') {
     // coordinate conversion from tuio to scratch coordinates.
     // @param: xCoordinate -> the x-coordinate value. It is a number between 0 and 1 (e.g. a procentage rate). 0 means total left, 1 means total right.
     // @result: the x value in scratch coordinates. A value between -240 (total left) and + 240 (total right)
-    window.convertXToScratchCoordinate = function(xCoordinate) {
+    var convertXToScratchCoordinate = function(xCoordinate) {
         return Math.round(-240.0 + 480.0 * xCoordinate);
     };
     // coordinate conversion from tuio to scratch coordinates.
     // @param: yCoordinate --> the y-coordinate value. It is a number between 0 and 1 (e.g. a procentage rate). 0 means top, 1 means bottom
     // @result: the y value in scratch coordinates. A value between +180 (top) and -180 (bottom)
-    window.convertYToScratchCoordinate = function(yCoordinate) {
+    var convertYToScratchCoordinate = function(yCoordinate) {
         return Math.round(180.0 - 360.0 * yCoordinate);
     };
 
-}
-// end client initialisation ---------------------------------------------------------------------------------------
+    return {
+        // begin definition of block behavior ------------------------------------------------------------------------------
 
-module.exports = {
-    // begin definition of block behavior ------------------------------------------------------------------------------
-
-    // this method defines the behavior of the update-event-hat-block. It is continuously executed by the scratch-flash-app, for every instantiated update-hat-block.
-    // The update-event-block executes is command stack, if and only if the tuio object with the given symbolID is updated within the last 50 ms.
-    // @param: id --> the symbolID of the object that should be checked for updates.
-    updateEventHatBlock: function(id) {
-        if (window.trueUpdateCount[id] > 1) {
-            window.trueUpdateCount[id] = 0;
-            return false;
-        }
-        var current = window.tuioObjects[id];
-        if (typeof current == 'undefined' || current == null) {
-            return false;
-        }
-        // compare the times of the received Update with the current time
-        var sessionTime = Tuio.Time.getSessionTime();
-        var currentTime = current.getTuioTime();
-        var timeDiff = sessionTime.subtractTime(currentTime);
-        var value = (timeDiff.getSeconds() === 0 &&
-                timeDiff.getMicroseconds() <= window.expiringMicroseconds);
-        if (value) {
-            // this mechanism is necessary due to the fact that hat blocks only fire when an up flank is received.
-            // This mechanism creates this flank
-            if (window.trueUpdateCount[id]) {
-                window.trueUpdateCount[id]++;
-            } else {
-                window.trueUpdateCount[id] = 1;
+        // this method defines the behavior of the update-event-hat-block. It is continuously executed by the scratch-flash-app, for every instantiated update-hat-block.
+        // The update-event-block executes is command stack, if and only if the tuio object with the given symbolID is updated within the last 50 ms.
+        // @param: id --> the symbolID of the object that should be checked for updates.
+        updateEventHatBlock: function(id) {
+            if (trueUpdateCount[id] > 1) {
+                trueUpdateCount[id] = 0;
+                return false;
             }
-        }
-        return value;
+            var current = tuioObjects[id];
+            if (typeof current == 'undefined' || current == null) {
+                return false;
+            }
+            // compare the times of the received Update with the current time
+            var sessionTime = Tuio.Time.getSessionTime();
+            var currentTime = current.getTuioTime();
+            var timeDiff = sessionTime.subtractTime(currentTime);
+            var value = (timeDiff.getSeconds() === 0 &&
+                    timeDiff.getMicroseconds() <= expiringMicroseconds);
+            if (value) {
+                // this mechanism is necessary due to the fact that hat blocks only fire when an up flank is received.
+                // This mechanism creates this flank
+                if (trueUpdateCount[id]) {
+                    trueUpdateCount[id]++;
+                } else {
+                    trueUpdateCount[id] = 1;
+                }
+            }
+            return value;
 
-    },
+        },
 
-    // this method defines the behavior of the add-event-hat-block. It is continuously executed by the scratch-flash-app, for every instantiated add-hat-block.
-    // @param: id --> the symbolID of the object that should be checked for addings.
-    addEventHatBlock: function(id) {
-        if (window.checkID(id) === true) {
-            if (window.add[id] === true) {
-                window.add[id] = false;
-                return true;
+        // this method defines the behavior of the add-event-hat-block. It is continuously executed by the scratch-flash-app, for every instantiated add-hat-block.
+        // @param: id --> the symbolID of the object that should be checked for addings.
+        addEventHatBlock: function(id) {
+            if (checkID(id) === true) {
+                if (add[id] === true) {
+                    add[id] = false;
+                    return true;
+                } else {
+                    return false;
+                }
             } else {
                 return false;
             }
-        } else {
-            return false;
-        }
-    },
+        },
 
-    // this method defines the behavior of the remove-event-hat-block. It is continuously executed by the scratch-flash-app, for every instantiated remove-hat-block.
-    // @param: id --> the symbolID of the object that should be checked for removals.
-    removeEventHatBlock: function(id) {
-        var current = window.remove[id];
-        if (typeof current == 'undefined' || current == null) {
-            return false;
-        }
-        var currentStatus = current.getTuioState();
-
-        return currentStatus == Tuio.Container.TUIO_REMOVED;
-    },
-
-    // this method defines the behavior of the tuioObject block. It returns the id of the typed in integer value.
-    // @param: id --> the typed in integer value
-    tuioObject: function(id) {
-        return id;
-    },
-
-    // this method defines the behavior of the tuioObject SessionID block. It encodes the the typed in integer value by returning
-    // -id. This way, the blocks can distinguish between sessionID and SymboldID
-    // @param: id --> the typed in integer value in the block
-    tuioObjectSessionID: function(id) {
-        return -id;
-    },
-
-    // this method defines the behavior of the tuio-cursor block. It returns the cursor id.
-    tuioCursor: function() {
-        return window.cursorID;
-    },
-
-    // the method defines the behavior of the tuio-attribute-block. Returns the value of the
-    // given attribute with attribtueName and the tuio object with symbolID id, or the tuio-cursor, or the latest object id
-    // @param: attributeName --> the name of the attribute that should be returned
-    // @param: id --> the returned integer value of the block that is nested in the tuio-attribute-block. Should be a symboldID or
-    // the window.latestObjectID or the window.cursorID
-    getTuioAttribute: function(attributeName, id) {
-        var current;
-        // decode the id
-        if (id == window.latestObjectID) {
-            current = window.latestTuioObject;
-        } else {
-            current = window.tuioObjects[id];
-        }
-
-        var menus = this.descriptor.menus;
-        if (typeof current != 'undefined' && current != null) {
-            // switch between the selecte menu entry and return accordingly
-            switch (attributeName) {
-                case menus.objectAttributes[0]: // case PosX
-                    return window.convertXToScratchCoordinate(current.getX());
-                case menus.objectAttributes[1]: // case PosY
-                    return window.convertYToScratchCoordinate(current.getY());
-                case menus.objectAttributes[2]:
-                    return current.getAngleDegrees();
-                case menus.objectAttributes[3]:
-                    return current.getMotionSpeed();
-                case menus.objectAttributes[4]:
-                    return current.getMotionAccel();
-                case menus.objectAttributes[5]:
-                    return current.getRotationSpeed();
-                case menus.objectAttributes[6]:
-                    return current.getRotationAccel();
-                case menus.objectAttributes[7]:
-                    return current.getXSpeed();
-                case menus.objectAttributes[8]:
-                    return current.getYSpeed();
-                case menus.objectAttributes[9]:
-                    return current.sessionId;
+        // this method defines the behavior of the remove-event-hat-block. It is continuously executed by the scratch-flash-app, for every instantiated remove-hat-block.
+        // @param: id --> the symbolID of the object that should be checked for removals.
+        removeEventHatBlock: function(id) {
+            var current = remove[id];
+            if (typeof current == 'undefined' || current == null) {
+                return false;
             }
-        } else {
-            return 'ERROR: No object with ' + id + ' on camera!';
-        }
-    },
-
-    // the method defines the behavior of the tuio-state block. It returns whether the tuio-object with symboldID 'id' is in the
-    // state 'state' or the TUIO-Cursor is in the state 'state'
-    // @ param: id --> the returned integer value of the block that is nested in the tuio-attribute-block. Should be a symboldID or
-    // the window.latestObjectID or the window.cursorID
-    // @param state --> the state that should be checked
-    getStateOfTuioObject: function(id, state) {
-        var current;
-        // decode the id
-        if (id == window.latestObjectID) {
-            current = window.latestTuioObject;
-        } else {
-            current = window.tuioObjects[id];
-        }
-        if (typeof current != 'undefined' && current != null) {
-            var menus = this.descriptor.menus;
             var currentStatus = current.getTuioState();
-            switch (state) {
-                // switch between the selecte menu entry and return accordinglys
-                case menus.objectStates[0]: // case Moving
-                    return ((currentStatus === Tuio.Object.TUIO_ACCELERATING) ||
+
+            return currentStatus == Tuio.Container.TUIO_REMOVED;
+        },
+
+        // this method defines the behavior of the tuioObject block. It returns the id of the typed in integer value.
+        // @param: id --> the typed in integer value
+        tuioObject: function(id) {
+            return id;
+        },
+
+        // this method defines the behavior of the tuioObject SessionID block. It encodes the the typed in integer value by returning
+        // -id. This way, the blocks can distinguish between sessionID and SymboldID
+        // @param: id --> the typed in integer value in the block
+        tuioObjectSessionID: function(id) {
+            return -id;
+        },
+
+        // this method defines the behavior of the tuio-cursor block. It returns the cursor id.
+        tuioCursor: function() {
+            return cursorID;
+        },
+
+        // the method defines the behavior of the tuio-attribute-block. Returns the value of the
+        // given attribute with attribtueName and the tuio object with symbolID id, or the tuio-cursor, or the latest object id
+        // @param: attributeName --> the name of the attribute that should be returned
+        // @param: id --> the returned integer value of the block that is nested in the tuio-attribute-block. Should be a symboldID or
+        // the var latestObjectID or the var cursorID
+        getTuioAttribute: function(attributeName, id) {
+            var current;
+            // decode the id
+            if (id == latestObjectID) {
+                current = latestTuioObject;
+            } else {
+                current = tuioObjects[id];
+            }
+
+            var menus = this.descriptor.menus;
+            if (typeof current != 'undefined' && current != null) {
+                // switch between the selecte menu entry and return accordingly
+                switch (attributeName) {
+                    case menus.objectAttributes[0]: // case PosX
+                        return convertXToScratchCoordinate(current
+                                .getX());
+                    case menus.objectAttributes[1]: // case PosY
+                        return convertYToScratchCoordinate(current
+                                .getY());
+                    case menus.objectAttributes[2]:
+                        return current.getAngleDegrees();
+                    case menus.objectAttributes[3]:
+                        return current.getMotionSpeed();
+                    case menus.objectAttributes[4]:
+                        return current.getMotionAccel();
+                    case menus.objectAttributes[5]:
+                        return current.getRotationSpeed();
+                    case menus.objectAttributes[6]:
+                        return current.getRotationAccel();
+                    case menus.objectAttributes[7]:
+                        return current.getXSpeed();
+                    case menus.objectAttributes[8]:
+                        return current.getYSpeed();
+                    case menus.objectAttributes[9]:
+                        return current.symbolId;
+                    case menus.objectAttributes[10]:
+                        return current.sessionId;
+                }
+            } else {
+                return 'ERROR: No object with ' + id + ' on camera!';
+            }
+        },
+
+        // the method defines the behavior of the tuio-state block. It returns whether the tuio-object with symboldID 'id' is in the
+        // state 'state' or the TUIO-Cursor is in the state 'state'
+        // @ param: id --> the returned integer value of the block that is nested in the tuio-attribute-block. Should be a symboldID or
+        // the var latestObjectID or the var cursorID
+        // @param state --> the state that should be checked
+        getStateOfTuioObject: function(id, state) {
+            var current;
+            // decode the id
+            if (id == latestObjectID) {
+                current = latestTuioObject;
+            } else {
+                current = tuioObjects[id];
+            }
+            if (typeof current != 'undefined' && current != null) {
+                var menus = this.descriptor.menus;
+                var currentStatus = current.getTuioState();
+                switch (state) {
+                    // switch between the selecte menu entry and return accordinglys
+                    case menus.objectStates[0]: // case Moving
+                        return (
+                            (currentStatus === Tuio.Object.TUIO_ACCELERATING) ||
                             (currentStatus === Tuio.Object.TUIO_DECELERATING) ||
                             (currentStatus === Tuio.Object.TUIO_ROTATING));
-                case menus.objectStates[1]: // case Accelerating
-                    return currentStatus == Tuio.Object.TUIO_ACCELERATING;
-                case menus.objectStates[2]: // case Decelerating
-                    return currentStatus == Tuio.Object.TUIO_DECELERATING;
-                case menus.objectStates[3]: // case Rotating
-                    return currentStatus == Tuio.Object.TUIO_ROTATING;
-            }
-        } else {
-            return 'ERROR: No object with ' + id + ' on camera!';
-        }
-    },
-
-    // this method defines the behavior of the 'updateOnAny'-hat-block. The hat block executes its command stack, if and only if
-    // there was an update on any tuio object within the last 50 ms
-    updateOnAnyObject: function() {
-        var id = window.latestObjectID;
-        if (window.trueUpdateCount[id] > 1) {
-            window.trueUpdateCount[id] = 0;
-            return false;
-        }
-        var current = window.latestTuioObject;
-        if (typeof current == 'undefined' || current == null) {
-            return false;
-        }
-        // compare the times of the received Update with the current time
-        var sessionTime = Tuio.Time.getSessionTime();
-        var currentTime = current.getTuioTime();
-        var timeDiff = sessionTime.subtractTime(currentTime);
-        var value = (timeDiff.getSeconds() === 0 &&
-                timeDiff.getMicroseconds() <= window.expiringMicroseconds);
-        if (value) {
-            // this mechanism is necessary due to the fact that hat blocks only fire when an up flank is received.
-            // This mechanism creates this flank
-            if (window.trueUpdateCount[id]) {
-                window.trueUpdateCount[id]++;
+                    case menus.objectStates[1]: // case Accelerating
+                        return currentStatus == Tuio.Object.TUIO_ACCELERATING;
+                    case menus.objectStates[2]: // case Decelerating
+                        return currentStatus == Tuio.Object.TUIO_DECELERATING;
+                    case menus.objectStates[3]: // case Rotating
+                        return currentStatus == Tuio.Object.TUIO_ROTATING;
+                }
             } else {
-                window.trueUpdateCount[id] = 1;
+                return 'ERROR: No object with ' + id + ' on camera!';
             }
+        },
+
+        // this method defines the behavior of the 'updateOnAny'-hat-block. The hat block executes its command stack, if and only if
+        // there was an update on any tuio object within the last 50 ms
+        updateOnAnyObject: function() {
+            var id = latestObjectID;
+            if (trueUpdateCount[id] > 1) {
+                trueUpdateCount[id] = 0;
+                return false;
+            }
+            var current = latestTuioObject;
+            if (typeof current == 'undefined' || current == null) {
+                return false;
+            }
+            // compare the times of the received Update with the current time
+            var sessionTime = Tuio.Time.getSessionTime();
+            var currentTime = current.getTuioTime();
+            var timeDiff = sessionTime.subtractTime(currentTime);
+            var value = (timeDiff.getSeconds() === 0 &&
+                    timeDiff.getMicroseconds() <= expiringMicroseconds);
+            if (value) {
+                // this mechanism is necessary due to the fact that hat blocks only fire when an up flank is received.
+                // This mechanism creates this flank
+                if (trueUpdateCount[id]) {
+                    trueUpdateCount[id]++;
+                } else {
+                    trueUpdateCount[id] = 1;
+                }
+            }
+            return value;
+        },
+
+        // this method defines the behavior of the 'latest tuio object' block. It returns the symbolID of the latest changed object.
+        getLatestTuioObject: function() {
+            return latestObjectID;
+        },
+
+        // end block behavior definitions ----------------------------------------------------------------------------------
+
+        // defined the shutdown behavior of the extension
+        _shutdown: function() {
+            client.socket.emit('Disconnect');
+            client.onDisconnect();
+            console.log('Shutting down...');
+        },
+
+        // standard answer
+        _getStatus: function() {
+            return {
+                status: 2,
+                msg: 'Ready'
+            };
         }
-        return value;
-    },
-
-    // this method defines the behavior of the 'latest tuio object' block. It returns the symbolID of the latest changed object.
-    getLatestTuioObject: function() {
-        return window.latestObjectID;
-    },
-
-    // end block behavior definitions ----------------------------------------------------------------------------------
-
-    // defined the shutdown behavior of the extension
-    _shutdown: function() {
-        window.client.socket.emit('Disconnect');
-        window.client.onDisconnect();
-        console.log('Shutting down...');
-    },
-
-    // standard answer
-    _getStatus: function() {
-        return {
-            status: 2,
-            msg: 'Ready'
-        };
-    }
-};
+    };
+})();
