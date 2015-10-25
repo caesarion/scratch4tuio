@@ -9,7 +9,8 @@ module.exports = function(grunt) {
         pkg: grunt.file.readJSON('package.json'),
         banner: '/*!\n' +
             ' * Scratch4TUIO v<%= pkg.version %> (<%= pkg.homepage %>)\n' +
-            ' * Copyright 2015-<%= grunt.template.today("yyyy") %> <%= pkg.author %>\n' +
+            ' * Copyright 2015-<%= grunt.template.today("yyyy") %> ' +
+                '<%= pkg.author %>\n' +
             ' * Licensed under the <%= pkg.license %> license\n' +
             ' */\n',
 
@@ -18,7 +19,7 @@ module.exports = function(grunt) {
                 banner: '<%= banner %>',
             },
             dist: {
-                src: [ 'src/index.js' ],
+                src: ['src/index.js'],
                 dest: '<%= pkg.name %>.js',
             },
         },
@@ -54,13 +55,19 @@ module.exports = function(grunt) {
             },
         },
 
-        // jshint: {
-        //   files: ['src/tuio.js', 'src/extension.js'],
-        //   options: {jshintrc: '.jshintrc'}
-        // },
+        jshint: {
+            src: 'src/*.js',
+            options: {jshintrc: '.jshintrc'}
+        },
+
+        jscs: {
+            src: 'src/*.js',
+            options: {config: '.jscsrc'}
+        }
     });
 
-    // grunt.loadNpmTasks('grunt-contrib-jshint');
+    grunt.loadNpmTasks('grunt-contrib-jshint');
+    grunt.loadNpmTasks('grunt-jscs');
     grunt.loadNpmTasks('grunt-browserify');
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-compress');
@@ -69,21 +76,25 @@ module.exports = function(grunt) {
         var descr = grunt.file.readJSON('src/descriptor.json');
 
         var project = grunt.file.readJSON('build-support/sbx/project.json');
+
+        var lang = 'en';
         project.info.savedExtensions[0].extensionName = descr.title;
         project.info.savedExtensions[0].javascriptURL = descr.javascriptURL;
-        project.info.savedExtensions[0].blockSpecs = descr.descriptors['en'].blocks;
-        project.info.savedExtensions[0].menus = descr.descriptors['en'].menus;
+        project.info.savedExtensions[0].blockSpecs =
+                descr.descriptors[lang].blocks;
+        project.info.savedExtensions[0].menus = descr.descriptors[lang].menus;
 
         grunt.file.write('_tmp/project.json', JSON.stringify(project, null, 2));
 
         grunt.file.copy('build-support/sbx/0.png', '_tmp/0.png');
         grunt.file.copy('build-support/sbx/0.wav', '_tmp/0.wav');
     });
-    
+
     grunt.registerTask('sbx-clean', 'Clean temporary .sbx files.', function() {
         grunt.file.delete('_tmp');
     });
 
-    grunt.registerTask('default', ['browserify','uglify','sbx','compress:sbx','sbx-clean']);
+    grunt.registerTask('default', ['jshint','jscs','browserify','uglify',
+            'sbx','compress:sbx','sbx-clean']);
 
 };

@@ -1,0 +1,23 @@
+{
+    "asi": false,
+    "browser": true,
+    "browserify": true,
+    "boss": true,
+    "eqeqeq": false,
+    "eqnull": true,
+    "expr": true,
+    "globals": {
+        "io": false,
+        "Tuio": true,
+        "_": false,
+        "console": false,
+        "window": true,
+        "ScratchExtensions": false
+    },
+    "jquery": true,
+    "latedef": true,
+    "nonbsp": true,
+    "strict": false,
+    "undef": true,
+    "unused": true
+}
