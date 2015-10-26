@@ -54,3 +54,22 @@ then start the build with
 ```bash
 grunt
 ```
+
+## Developing and testing the extension
+
+To run the extension during development, run
+
+```bash
+grunt test
+```
+
+This will build the extension script, clone scratchx, start a webserver,
+open Scratch4TUIO in Chrome and watch the extension script for changes.
+
+After changing the source code run
+
+```bash
+grunt dev
+```
+
+to rebuild the extension and trigger the opening of a new ScratchX tab in chrome.
