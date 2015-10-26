@@ -4,8 +4,7 @@
 
 var osc = require('../node_modules/osc/dist/osc-browser.js');
 
-module.exports = (function(root) {
-
+module.exports = (function(root) { 'use strict';
     // Initial Setup, events mixin and extend/inherits taken from Backbone.js
     // See Backbone.js source for original version and comments.
 

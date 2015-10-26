@@ -11,13 +11,13 @@
         "Tuio": true,
         "_": false,
         "console": false,
-        "window": true,
+        "window": false,
         "ScratchExtensions": false
     },
     "jquery": true,
     "latedef": true,
     "nonbsp": true,
-    "strict": false,
+    "strict": true,
     "undef": true,
     "unused": true
 }

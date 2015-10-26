@@ -1,7 +1,7 @@
 var ext = require('./extension.js');
 var data = require('./descriptor.json');
 
-(function(e) {
+(function(e) { 'use strict';
     // Check for GET param 'lang'
     // codes from https://github.com/khanning/scratch-arduino-extension/blob/da1ab317a215a8c1c5cda1b9db756b9edc14ba68/arduino_extension.js#L533-L541
     var paramString = window.location.search.replace(/^\?|\/$/g, '');

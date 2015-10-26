@@ -1,12 +1,7 @@
-// initialize tuio client ------------------------------------------------------------------------------------------
-if (typeof window.extensionWasLoaded == 'undefined') {
-    // make sure intitilalization is done only once!
-    window.extensionWasLoaded = true;
-}
-// end client initialisation ---------------------------------------------------------------------------------------
+var Tuio = require('./tuio.js');
 
-module.exports = (function() {
-    var Tuio = require('./tuio.js');
+module.exports = (function() { 'use strict';
+    // initialize tuio client ------------------------------------------------------------------------------------------
 
     // list of all tuio tuio objects that were updated, added or removed
     var tuioObjects = [];
@@ -86,6 +81,7 @@ module.exports = (function() {
     // if there is no connection possible, the event based socket.io client assures to reconnect as soon as
     // the server is available
     client.connect();
+    // end client initialisation ---------------------------------------------------------------------------------------
 
     // define helper functions that work on the input of the blocks ----------------------------------------
     var checkID = function(id) {
