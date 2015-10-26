@@ -1,79 +1,160 @@
 {
-    "objName": "Stage",
-    "sounds": [{
-            "soundName": "pop",
-            "soundID": 1,
-            "md5": "83a9787d4cb6f3b7632b4ddfebf74367.wav",
-            "sampleCount": 258,
-            "rate": 11025,
-            "format": ""
-        }],
-    "costumes": [{
-            "costumeName": "backdrop1",
-            "baseLayerID": 3,
-            "baseLayerMD5": "510da64cf172d53750dffd23fbf73563.png",
-            "bitmapResolution": 1,
-            "rotationCenterX": 240,
-            "rotationCenterY": 180
-        }],
-    "currentCostumeIndex": 0,
-    "penLayerMD5": "279467d0d49e152706ed66539b577c00.png",
-    "tempoBPM": 60,
-    "videoAlpha": 0.5,
-    "children": [{
-            "objName": "Sprite1",
-            "sounds": [{
-                    "soundName": "meow",
-                    "soundID": 0,
-                    "md5": "83c36d806dc92327b9e7049a565c6bff.wav",
-                    "sampleCount": 18688,
-                    "rate": 22050,
-                    "format": ""
-                }],
-            "costumes": [{
-                    "costumeName": "costume1",
-                    "baseLayerID": 1,
-                    "baseLayerMD5": "f9a1c175dbe2e5dee472858dd30d16bb.svg",
-                    "bitmapResolution": 1,
-                    "rotationCenterX": 47,
-                    "rotationCenterY": 55
-                },
-                {
-                    "costumeName": "costume2",
-                    "baseLayerID": 2,
-                    "baseLayerMD5": "6e8bd9ae68fdb02b7e1e3df656a75635.svg",
-                    "bitmapResolution": 1,
-                    "rotationCenterX": 47,
-                    "rotationCenterY": 55
-                }],
-            "currentCostumeIndex": 0,
-            "scratchX": 0,
-            "scratchY": 0,
-            "scale": 1,
-            "direction": 90,
-            "rotationStyle": "normal",
-            "isDraggable": false,
-            "indexInLibrary": 1,
-            "visible": true,
-            "spriteInfo": {
-            }
-        }],
-    "info": {
-        "scriptCount": 0,
-        "flashVersion": "MAC 11,8,800,94",
-        "spriteCount": 1,
-        "hasCloudData": false,
-        "videoOn": false,
-        "userAgent": "Mozilla\/5.0 (Macintosh; Intel Mac OS X 10_8_4) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/30.0.1552.0 Safari\/537.36",
-        "projectID": "11175527",
-        "swfVersion": "v341",
+	"objName": "Stage",
+	"variables": [{
+			"name": "x",
+			"value": 124,
+			"isPersistent": false
+		}],
+	"sounds": [{
+			"soundName": "pop",
+			"soundID": 0,
+			"md5": "83a9787d4cb6f3b7632b4ddfebf74367.wav",
+			"sampleCount": 258,
+			"rate": 11025,
+			"format": ""
+		}],
+	"costumes": [{
+			"costumeName": "backdrop1",
+			"baseLayerID": 3,
+			"baseLayerMD5": "739b5e2a2435f6e1ec2993791b423146.png",
+			"bitmapResolution": 1,
+			"rotationCenterX": 240,
+			"rotationCenterY": 180
+		}],
+	"currentCostumeIndex": 0,
+	"penLayerMD5": "5c81a336fab8be57adc039a8a2b33ca9.png",
+	"penLayerID": 0,
+	"tempoBPM": 60,
+	"videoAlpha": 0.5,
+	"children": [{
+			"target": "S4T",
+			"cmd": "getVar:",
+			"param": "objId",
+			"color": 15629590,
+			"label": "S4T: objId",
+			"mode": 1,
+			"sliderMin": 0,
+			"sliderMax": 100,
+			"isDiscrete": true,
+			"x": 5,
+			"y": 5,
+			"visible": true
+		},
+		{
+			"objName": "S4T",
+			"variables": [{
+					"name": "objId",
+					"value": 16,
+					"isPersistent": false
+				}],
+			"scripts": [[31,
+					79,
+					[["Scratch4TUIO.updateOnAnyObject"],
+						["setVar:to:", "objId", ["Scratch4TUIO.getTuioAttribute", "symbolID", ["Scratch4TUIO.getLatestTuioObject"]]],
+						["think:", ["readVariable", "objId"]],
+						["heading:", ["Scratch4TUIO.getTuioAttribute", "Angle", ["Scratch4TUIO.tuioObject", ["readVariable", "objId"]]]],
+						["xpos:", ["Scratch4TUIO.getTuioAttribute", "Position X", ["Scratch4TUIO.tuioObject", ["readVariable", "objId"]]]],
+						["ypos:", ["Scratch4TUIO.getTuioAttribute", "Position Y", ["Scratch4TUIO.tuioObject", ["readVariable", "objId"]]]]]]],
+			"sounds": [{
+					"soundName": "pop",
+					"soundID": 0,
+					"md5": "83a9787d4cb6f3b7632b4ddfebf74367.wav",
+					"sampleCount": 258,
+					"rate": 11025,
+					"format": ""
+				}],
+			"costumes": [{
+					"costumeName": "S4T",
+					"baseLayerID": 1,
+					"baseLayerMD5": "7165cc28e5f13fc5ec94373450249d3d.png",
+					"bitmapResolution": 2,
+					"rotationCenterX": 68,
+					"rotationCenterY": 72
+				}],
+			"currentCostumeIndex": 0,
+			"scratchX": -60,
+			"scratchY": 5,
+			"scale": 1,
+			"direction": 90,
+			"rotationStyle": "normal",
+			"isDraggable": false,
+			"indexInLibrary": 1,
+			"visible": true,
+			"spriteInfo": {
+			}
+		},
+		{
+			"target": "Stage",
+			"cmd": "getVar:",
+			"param": "x",
+			"color": 15629590,
+			"label": "x",
+			"mode": 1,
+			"sliderMin": 0,
+			"sliderMax": 100,
+			"isDiscrete": true,
+			"x": 5,
+			"y": 32,
+			"visible": true
+		},
+		{
+			"objName": "Sprite1",
+			"scripts": [[30,
+					199,
+					[["Scratch4TUIO.updateEventHatBlock", ["Scratch4TUIO.tuioCursor"]],
+						["doIfElse",
+							["Scratch4TUIO.getStateOfTuioObject", ["Scratch4TUIO.tuioCursor"], "moving"],
+							[["gotoX:y:", ["Scratch4TUIO.getTuioAttribute", "Position X", ["Scratch4TUIO.tuioCursor"]], ["Scratch4TUIO.getTuioAttribute", "Position Y", ["Scratch4TUIO.tuioCursor"]]]],
+							null]]],
+				[21,
+					29,
+					[["Scratch4TUIO.addEventHatBlock", ["Scratch4TUIO.tuioCursor"]],
+						["putPenUp"],
+						["gotoX:y:", ["Scratch4TUIO.getTuioAttribute", "Position X", ["Scratch4TUIO.tuioCursor"]], ["Scratch4TUIO.getTuioAttribute", "Position Y", ["Scratch4TUIO.tuioCursor"]]],
+						["putPenDown"]]],
+				[44, 389, [["Scratch4TUIO.removeEventHatBlock", ["Scratch4TUIO.tuioCursor"]], ["putPenUp"], ["clearPenTrails"]]]],
+			"sounds": [{
+					"soundName": "pop",
+					"soundID": 0,
+					"md5": "83a9787d4cb6f3b7632b4ddfebf74367.wav",
+					"sampleCount": 258,
+					"rate": 11025,
+					"format": ""
+				}],
+			"costumes": [{
+					"costumeName": "costume1",
+					"baseLayerID": 2,
+					"baseLayerMD5": "9f023f9ede20c90844bdc484863bf325.png",
+					"bitmapResolution": 2,
+					"rotationCenterX": 0,
+					"rotationCenterY": 64
+				}],
+			"currentCostumeIndex": 0,
+			"scratchX": 78,
+			"scratchY": -19,
+			"scale": 1,
+			"direction": 90,
+			"rotationStyle": "normal",
+			"isDraggable": false,
+			"indexInLibrary": 2,
+			"visible": true,
+			"spriteInfo": {
+			}
+		}],
+	"info": {
+		"flashVersion": "MAC 19,0,0,226",
+		"scriptCount": 4,
+		"swfVersion": "v439",
+		"videoOn": false,
+		"spriteCount": 2,
 		"savedExtensions": [{
-                "extensionName": "scratch4tuio",
-                "javascriptURL": "",
-				"blockSpecs": [
-                ],
-				"menus": {
-				}
-			}]
-    }
+            "extensionName": "",
+            "javascriptURL": "",
+            "blockSpecs": [
+            ],
+            "menus": {
+            }
+		}],
+		"userAgent": "Mozilla\/5.0 (Macintosh; Intel Mac OS X 10_11_1) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/46.0.2490.71 Safari\/537.36"
+	}
 }
