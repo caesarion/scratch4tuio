@@ -33,9 +33,10 @@ module.exports = (function() { 'use strict';
 
     // set the behavior of what should happen when a certain event occurs: -------------------------------------
 
-    var onAddTuioCursor = function(/*addCursor*/) {
+    var onAddTuioCursor = function(addCursor) {
         add[cursorID] = true;
         remove[cursorID] = null;
+        tuioObjects[cursorID] = addCursor;
     };
 
     var onUpdateTuioCursor = function(updateCursor) {
@@ -50,6 +51,7 @@ module.exports = (function() { 'use strict';
         add[addObject.symbolId] = true;
         remove[addObject.symbolId] = null;
         tuioObjects[addObject.symbolId] = addObject;
+        latestTuioObject = addObject;
     };
 
     var onUpdateTuioObject = function(updateObject) {
@@ -104,6 +106,7 @@ module.exports = (function() { 'use strict';
         return Math.round(180.0 - 360.0 * yCoordinate);
     };
 
+    // Expose extension interface to module.exports
     return {
         // begin definition of block behavior ------------------------------------------------------------------------------
 
