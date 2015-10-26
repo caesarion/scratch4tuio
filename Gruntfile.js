@@ -14,6 +14,12 @@ module.exports = function(grunt) {
             ' * Licensed under the <%= pkg.license %> license\n' +
             ' */\n',
 
+        // For checkout of ScratchX
+        scratchx_git: 'https://github.com/LLK/scratchx.git',
+        scratchx_path: 'node_modules/scratchx',
+        // For opening scratchx for testing
+        scratchx_url: 'http://localhost:8888/<%= scratchx_path %>?url=http://localhost:8888/<%= pkg.name %>.js#scratch',
+
         browserify: {
             options: {
                 banner: '<%= banner %>',
@@ -63,17 +69,75 @@ module.exports = function(grunt) {
         jscs: {
             src: 'src/*.js',
             options: {config: '.jscsrc'}
-        }
+        },
+
+        connect: {
+            server: {
+                options: {
+                    port: 8888,
+                    base: '.'
+                }
+            }
+        },
+
+        open: {
+            test: {
+                path: '<%= scratchx_url %>',
+                app: 'Google Chrome'
+            },
+        },
+
+        watch: {
+            test: {
+                files: ['<%= pkg.name %>.js'],
+                tasks: ['open:test'],
+                options: {
+                //   spawn: false,
+                },
+            }
+        },
+
+        gitclone: {
+           scratchx: {
+               options: {
+                   repository: '<%= scratchx_git %>',
+                   branch: 'gh-pages',
+                   directory: '<%= scratchx_path %>'
+               }
+           }
+        },
+
+        gitpull: {
+           scratchx: {
+                options: {
+                    cwd: './node_modules/scratchx'
+                }
+           }
+        },
     });
 
-    grunt.loadNpmTasks('grunt-contrib-jshint');
-    grunt.loadNpmTasks('grunt-jscs');
     grunt.loadNpmTasks('grunt-browserify');
-    grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-compress');
+    grunt.loadNpmTasks('grunt-contrib-connect');
+    grunt.loadNpmTasks('grunt-contrib-jshint');
+    grunt.loadNpmTasks('grunt-contrib-uglify');
+    grunt.loadNpmTasks('grunt-contrib-watch');
+    grunt.loadNpmTasks('grunt-git');
+    grunt.loadNpmTasks('grunt-jscs');
+    grunt.loadNpmTasks('grunt-open');
 
-    grunt.registerTask('sbx', 'Create .sbx file.', function() {
+    grunt.registerTask('sbx-create', 'Creates content for .sbx file.', function() {
         var descr = grunt.file.readJSON('src/descriptor.json');
+
+        var files = grunt.file.expand({cwd: './build-support/sbx'}, '*');
+        for (var i = 0; i < files.length; i++) {
+            if (files[i] !== 'project.json') {
+                grunt.file.copy(
+                        './build-support/sbx/' + files[i],
+                        '_tmp/' + files[i]
+                    );
+            }
+        }
 
         var project = grunt.file.readJSON('build-support/sbx/project.json');
 
@@ -85,16 +149,31 @@ module.exports = function(grunt) {
         project.info.savedExtensions[0].menus = descr.descriptors[lang].menus;
 
         grunt.file.write('_tmp/project.json', JSON.stringify(project, null, 2));
-
-        grunt.file.copy('build-support/sbx/0.png', '_tmp/0.png');
-        grunt.file.copy('build-support/sbx/0.wav', '_tmp/0.wav');
+        grunt.log.ok('Created temporary sbx files.');
     });
 
     grunt.registerTask('sbx-clean', 'Clean temporary .sbx files.', function() {
         grunt.file.delete('_tmp');
+        grunt.log.ok('Removed temporary files');
     });
 
-    grunt.registerTask('default', ['jshint','jscs','browserify','uglify',
-            'sbx','compress:sbx','sbx-clean']);
+    grunt.registerTask('sbx', ['sbx-create', 'compress:sbx', 'sbx-clean']);
+
+    grunt.registerTask('scratchx', 'Clone or checkout ScratchX for testing.', function() {
+        if (grunt.file.exists('./node_modules/scratchx') ) {
+            grunt.log.ok('scratchx found, updating branch');
+            grunt.task.run('gitpull');
+        } else {
+            grunt.log.ok('scratchx not found, cloning from github');
+            grunt.task.run('gitclone');
+        }
+    });
+
+    grunt.registerTask('dist', ['jshint', 'jscs', 'browserify', 'uglify', 'sbx']);
+    grunt.registerTask('dev', ['jshint', 'jscs', 'browserify']);
+    grunt.registerTask('test', ['browserify', 'scratchx',
+            'connect', 'open', 'watch']);
+
+    grunt.registerTask('default', ['dist']);
 
 };
