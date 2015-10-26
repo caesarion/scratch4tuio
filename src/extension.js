@@ -6,7 +6,7 @@ if (typeof window.extensionWasLoaded == 'undefined') {
 // end client initialisation ---------------------------------------------------------------------------------------
 
 module.exports = (function() {
-    require('./tuio.js');
+    var Tuio = require('./tuio.js');
 
     // list of all tuio tuio objects that were updated, added or removed
     var tuioObjects = [];
