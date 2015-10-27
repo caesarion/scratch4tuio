@@ -308,9 +308,10 @@ module.exports = (function() { 'use strict';
 
         // defined the shutdown behavior of the extension
         _shutdown: function() {
-            client.socket.emit('Disconnect');
-            client.onDisconnect();
             console.log('Shutting down...');
+            // client.socket.emit('disconnect');
+            // client.onDisconnect();
+            client.disconnect();
         },
 
         // standard answer
