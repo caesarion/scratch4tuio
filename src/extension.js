@@ -35,9 +35,10 @@ module.exports = (function() { 'use strict';
 
     // set the behavior of what should happen when a certain event occurs: -------------------------------------
 
-    var onAddTuioCursor = function(/*addCursor*/) {
+    var onAddTuioCursor = function(addCursor) {
         add[cursorID] = true;
         remove[cursorID] = null;
+        tuioObjects[cursorID] = addCursor;
     };
 
     var onUpdateTuioCursor = function(updateCursor) {
@@ -54,6 +55,7 @@ module.exports = (function() { 'use strict';
         add[symID] = true;
         remove[symID] = null;
         tuioObjects[symID] = addObject;
+        latestTuioObject = addObject;
     };
 
     var onUpdateTuioObject = function(updateObject) {
@@ -149,6 +151,7 @@ module.exports = (function() { 'use strict';
         return Math.round(180.0 - 360.0 * yCoordinate);
     };
 
+    // Expose extension interface to module.exports
     return {
         // begin definition of block behavior ------------------------------------------------------------------------------
 
@@ -362,17 +365,19 @@ module.exports = (function() { 'use strict';
 
         // defined the shutdown behavior of the extension
         _shutdown: function() {
-            client.socket.emit('Disconnect');
-            client.onDisconnect();
             console.log('Shutting down...');
+            // client.socket.emit('disconnect');
+            // client.onDisconnect();
+            client.disconnect();
         },
 
         // standard answer
         _getStatus: function() {
-            return {
-                status: 2,
-                msg: 'Ready'
-            };
+            if (client.isConnected()) {
+                return {status: 2, msg: 'Ready'};
+            } else {
+                return {status: 1, msg: 'No connection to dispatcher'};
+            }
         }
     };
 })();

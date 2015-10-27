@@ -17203,55 +17203,54 @@ module.exports={
     "descriptors": {
         "en": {
             "blocks": [
-                ["h", "when %n updated", "updateEventHatBlock", ""],
+                ["h", "when %n changed", "updateEventHatBlock", ""],
                 ["h", "when %n added", "addEventHatBlock", ""],
                 ["h", "when %n removed", "removeEventHatBlock", ""],
-                ["h", "when any tuio object updated", "updateOnAnyObject", ""],
-                ["r", "latest TUIO Object", "getLatestTuioObject", ""],
-                ["r", "TUIO-Object with symbolID %n", "tuioObject", ""],
-                ["r", "TUIO-Object with sessionID %n", "tuioObjectSessionID", ""],
+                ["h", "when any TUIO-Object changed", "updateOnAnyObject", ""],
+                ["--"],
+                ["r", "last changed TUIO-Object", "getLatestTuioObject", ""],
+                ["r", "TUIO-Object with Symbol ID %n", "tuioObject", ""],
+                ["r", "TUIO-Object with Session ID %n", "tuioObjectSessionID", ""],
                 ["r", "TUIO-Cursor", "tuioCursor", ""],
-                ["r", "attribute %m.objectAttributes of %n", "getTuioAttribute", ""],
-                ["b", "Is %n %m.objectStates ?", "getStateOfTuioObject", ""]
+                ["r", "%m.objectAttributes of %n", "getTuioAttribute", "Position X", ""],
+                ["--"],
+                ["b", "%n is %m.objectStates ?", "getStateOfTuioObject", "", "moving"]
             ],
             "menus": {
                 "objectAttributes": ["Position X", "Position Y", "Angle", "Motion Speed", "Motion Accel", "Rotation Speed", "Rotation Accel", "xSpeed", "ySpeed", "symbolID", "sessionID"],
                 "objectStates": ["moving", "accelerating", "decelerating", "rotating"]
             },
-            "url": "http://caesarion.github.io/Scratch4TuioExtension"
+            "url": "http://caesarion.github.io/Scratch4TuioExtension/en.html"
         },
         "de": {
             "blocks": [
-                ["h", "falls %n ein Update erhält", "updateEventHatBlock", ""],
-                ["h", "falls %n hinzugefügt wird", "addEventHatBlock", ""],
-                ["h", "falls %n entfernt wird", "removeEventHatBlock", ""],
-                ["h", "falls irgendein TUIO-Objekt geupdatet wird", "updateOnAnyObject", ""],
+                ["h", "Wenn sich %n verändert", "updateEventHatBlock", ""],
+                ["h", "Wenn %n hinzugefügt wird", "addEventHatBlock", ""],
+                ["h", "Wenn %n entfernt wird", "removeEventHatBlock", ""],
+                ["h", "Wenn irgendein TUIO-Objekt verändert wird", "updateOnAnyObject", ""],
+                ["--"],
                 ["r", "zuletzt verändertes TUIO-Objekt ", "getLatestTuioObject", ""],
                 ["r", "TUIO-Objekt mit der Symbolnummer %n", "tuioObject", ""],
                 ["r", "TUIO-Objekt mit der Sitzungsnummer %n", "tuioObjectSessionID", ""],
                 ["r", "TUIO-Zeiger", "tuioCursor", ""],
-                ["r", "Attribut %m.objectAttributes von %n", "getTuioAttribute", ""],
-                ["b", "Ist %n %m.objectStates?", "getStateOfTuioObject", ""]
+                ["r", "%m.objectAttributes von %n", "getTuioAttribute", "Position X", ""],
+                ["--"],
+                ["b", "%n ist %m.objectStates ?", "getStateOfTuioObject", "", "in Bewegung"]
             ],
             "menus": {
                 "objectAttributes": ["Position X", "Position Y", "Winkel", "Bewegungsgeschwindigkeit", "Bewegungsbeschleunigung", "Drehgeschwindigkeit", "Drehbeschleunigung", "xGeschwindigkeit", "yGeschwindigkeit", "Symbolnummer", "Sitzungsnummer"],
                 "objectStates": ["in Bewegung", "am Beschleunigen", "am Bremsen", "am Drehen"]
             },
-            "url": "http://caesarion.github.io/Scratch4TuioExtension"
+            "url": "http://caesarion.github.io/Scratch4TuioExtension/de.html"
         }
     }
 }
 
 },{}],60:[function(require,module,exports){
-// initialize tuio client ------------------------------------------------------------------------------------------
-if (typeof window.extensionWasLoaded == 'undefined') {
-    // make sure intitilalization is done only once!
-    window.extensionWasLoaded = true;
-}
-// end client initialisation ---------------------------------------------------------------------------------------
+var Tuio = require('./tuio.js');
 
-module.exports = (function() {
-    var Tuio = require('./tuio.js');
+module.exports = (function() { 'use strict';
+    // initialize tuio client ------------------------------------------------------------------------------------------
 
     // list of all tuio tuio objects that were updated, added or removed
     var tuioObjects = [];
@@ -17283,9 +17282,10 @@ module.exports = (function() {
 
     // set the behavior of what should happen when a certain event occurs: -------------------------------------
 
-    var onAddTuioCursor = function(/*addCursor*/) {
+    var onAddTuioCursor = function(addCursor) {
         add[cursorID] = true;
         remove[cursorID] = null;
+        tuioObjects[cursorID] = addCursor;
     };
 
     var onUpdateTuioCursor = function(updateCursor) {
@@ -17300,6 +17300,7 @@ module.exports = (function() {
         add[addObject.symbolId] = true;
         remove[addObject.symbolId] = null;
         tuioObjects[addObject.symbolId] = addObject;
+        latestTuioObject = addObject;
     };
 
     var onUpdateTuioObject = function(updateObject) {
@@ -17331,6 +17332,7 @@ module.exports = (function() {
     // if there is no connection possible, the event based socket.io client assures to reconnect as soon as
     // the server is available
     client.connect();
+    // end client initialisation ---------------------------------------------------------------------------------------
 
     // define helper functions that work on the input of the blocks ----------------------------------------
     var checkID = function(id) {
@@ -17353,6 +17355,7 @@ module.exports = (function() {
         return Math.round(180.0 - 360.0 * yCoordinate);
     };
 
+    // Expose extension interface to module.exports
     return {
         // begin definition of block behavior ------------------------------------------------------------------------------
 
@@ -17554,17 +17557,19 @@ module.exports = (function() {
 
         // defined the shutdown behavior of the extension
         _shutdown: function() {
-            client.socket.emit('Disconnect');
-            client.onDisconnect();
             console.log('Shutting down...');
+            // client.socket.emit('disconnect');
+            // client.onDisconnect();
+            client.disconnect();
         },
 
         // standard answer
         _getStatus: function() {
-            return {
-                status: 2,
-                msg: 'Ready'
-            };
+            if (client.isConnected()) {
+                return {status: 2, msg: 'Ready'};
+            } else {
+                return {status: 1, msg: 'No connection to dispatcher'};
+            }
         }
     };
 })();
@@ -17573,7 +17578,7 @@ module.exports = (function() {
 var ext = require('./extension.js');
 var data = require('./descriptor.json');
 
-(function(e) {
+(function(e) { 'use strict';
     // Check for GET param 'lang'
     // codes from https://github.com/khanning/scratch-arduino-extension/blob/da1ab317a215a8c1c5cda1b9db756b9edc14ba68/arduino_extension.js#L533-L541
     var paramString = window.location.search.replace(/^\?|\/$/g, '');
@@ -17608,8 +17613,7 @@ var data = require('./descriptor.json');
 
 var osc = require('../node_modules/osc/dist/osc-browser.js');
 
-module.exports = (function(root) {
-
+module.exports = (function(root) { 'use strict';
     // Initial Setup, events mixin and extend/inherits taken from Backbone.js
     // See Backbone.js source for original version and comments.
 
@@ -18382,7 +18386,7 @@ module.exports = (function(root) {
                         break;
                     // blobs not yet implemented.
                     case '/tuio/2Dblb':
-                        console.log('Blog received');
+                        console.log('Blob received. Not yet implemented.');
                         break;
                 }
             }

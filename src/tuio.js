@@ -777,7 +777,7 @@ module.exports = (function(root) { 'use strict';
                         break;
                     // blobs not yet implemented.
                     case '/tuio/2Dblb':
-                        console.log('Blog received');
+                        console.log('Blob received. Not yet implemented.');
                         break;
                 }
             }

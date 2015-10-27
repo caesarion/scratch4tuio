@@ -161,8 +161,9 @@ module.exports = function(grunt) {
 
     grunt.registerTask('scratchx', 'Clone or checkout ScratchX for testing.', function() {
         if (grunt.file.exists('./node_modules/scratchx') ) {
-            grunt.log.ok('scratchx found, updating branch');
-            grunt.task.run('gitpull');
+            // grunt.log.ok('scratchx found, updating branch');
+            // grunt.task.run('gitpull');
+            grunt.log.ok('scratchx found, to pull the latest version run grunt gitpull:scratchx');
         } else {
             grunt.log.ok('scratchx not found, cloning from github');
             grunt.task.run('gitclone');
