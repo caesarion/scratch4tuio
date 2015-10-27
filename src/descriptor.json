@@ -9,11 +9,13 @@
                 ["h", "when %n added", "addEventHatBlock", ""],
                 ["h", "when %n removed", "removeEventHatBlock", ""],
                 ["h", "when any TUIO-Object changed", "updateOnAnyObject", ""],
+                ["--"],
                 ["r", "last changed TUIO-Object", "getLatestTuioObject", ""],
                 ["r", "TUIO-Object with Symbol ID %n", "tuioObject", ""],
                 ["r", "TUIO-Object with Session ID %n", "tuioObjectSessionID", ""],
                 ["r", "TUIO-Cursor", "tuioCursor", ""],
                 ["r", "%m.objectAttributes of %n", "getTuioAttribute", "Position X", ""],
+                ["--"],
                 ["b", "%n is %m.objectStates ?", "getStateOfTuioObject", "", "moving"]
             ],
             "menus": {
@@ -28,11 +30,13 @@
                 ["h", "Wenn %n hinzugefügt wird", "addEventHatBlock", ""],
                 ["h", "Wenn %n entfernt wird", "removeEventHatBlock", ""],
                 ["h", "Wenn irgendein TUIO-Objekt verändert wird", "updateOnAnyObject", ""],
+                ["--"],
                 ["r", "zuletzt verändertes TUIO-Objekt ", "getLatestTuioObject", ""],
                 ["r", "TUIO-Objekt mit der Symbolnummer %n", "tuioObject", ""],
                 ["r", "TUIO-Objekt mit der Sitzungsnummer %n", "tuioObjectSessionID", ""],
                 ["r", "TUIO-Zeiger", "tuioCursor", ""],
                 ["r", "%m.objectAttributes von %n", "getTuioAttribute", "Position X", ""],
+                ["--"],
                 ["b", "%n ist %m.objectStates ?", "getStateOfTuioObject", "", "in Bewegung"]
             ],
             "menus": {
