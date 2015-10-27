@@ -315,10 +315,11 @@ module.exports = (function() { 'use strict';
 
         // standard answer
         _getStatus: function() {
-            return {
-                status: 2,
-                msg: 'Ready'
-            };
+            if (client.isConnected()) {
+                return {status: 2, msg: 'Ready'};
+            } else {
+                return {status: 1, msg: 'No connection to dispatcher'};
+            }
         }
     };
 })();
