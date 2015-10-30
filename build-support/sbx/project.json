@@ -1,10 +1,5 @@
 {
 	"objName": "Stage",
-	"variables": [{
-			"name": "x",
-			"value": 124,
-			"isPersistent": false
-		}],
 	"sounds": [{
 			"soundName": "pop",
 			"soundID": 0,
@@ -44,7 +39,7 @@
 			"objName": "S4T",
 			"variables": [{
 					"name": "objId",
-					"value": 16,
+					"value": 0,
 					"isPersistent": false
 				}],
 			"scripts": [[31,
@@ -84,35 +79,21 @@
 			}
 		},
 		{
-			"target": "Stage",
-			"cmd": "getVar:",
-			"param": "x",
-			"color": 15629590,
-			"label": "x",
-			"mode": 1,
-			"sliderMin": 0,
-			"sliderMax": 100,
-			"isDiscrete": true,
-			"x": 5,
-			"y": 32,
-			"visible": true
-		},
-		{
 			"objName": "Sprite1",
-			"scripts": [[30,
-					199,
-					[["Scratch4TUIO.updateEventHatBlock", ["Scratch4TUIO.tuioCursor"]],
-						["doIfElse",
-							["Scratch4TUIO.getStateOfTuioObject", ["Scratch4TUIO.tuioCursor"], "moving"],
-							[["gotoX:y:", ["Scratch4TUIO.getTuioAttribute", "Position X", ["Scratch4TUIO.tuioCursor"]], ["Scratch4TUIO.getTuioAttribute", "Position Y", ["Scratch4TUIO.tuioCursor"]]]],
-							null]]],
-				[21,
+			"scripts": [[21,
 					29,
 					[["Scratch4TUIO.addEventHatBlock", ["Scratch4TUIO.tuioCursor"]],
 						["putPenUp"],
 						["gotoX:y:", ["Scratch4TUIO.getTuioAttribute", "Position X", ["Scratch4TUIO.tuioCursor"]], ["Scratch4TUIO.getTuioAttribute", "Position Y", ["Scratch4TUIO.tuioCursor"]]],
 						["putPenDown"]]],
-				[44, 389, [["Scratch4TUIO.removeEventHatBlock", ["Scratch4TUIO.tuioCursor"]], ["putPenUp"], ["clearPenTrails"]]]],
+				[22,
+					158,
+					[["Scratch4TUIO.updateEventHatBlock", ["Scratch4TUIO.tuioCursor"]],
+						["doIf",
+							["Scratch4TUIO.getStateOfTuioObject", ["Scratch4TUIO.tuioCursor"], "moving"],
+							[["putPenDown"],
+								["gotoX:y:", ["Scratch4TUIO.getTuioAttribute", "Position X", ["Scratch4TUIO.tuioCursor"]], ["Scratch4TUIO.getTuioAttribute", "Position Y", ["Scratch4TUIO.tuioCursor"]]]]]]],
+				[22, 319, [["Scratch4TUIO.removeEventHatBlock", ["Scratch4TUIO.tuioCursor"]], ["putPenUp"], ["clearPenTrails"]]]],
 			"sounds": [{
 					"soundName": "pop",
 					"soundID": 0,
