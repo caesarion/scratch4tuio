@@ -81,16 +81,27 @@ module.exports = function(grunt) {
         },
 
         open: {
-            test: {
+            osx: {
                 path: '<%= scratchx_url %>',
                 app: 'Google Chrome'
             },
+            win: {
+                path: '<%= scratchx_url %>',
+                app: 'chrome'
+            }
         },
 
         watch: {
-            test: {
+            osx: {
                 files: ['<%= pkg.name %>.js'],
-                tasks: ['open:test'],
+                tasks: ['open:osx'],
+                options: {
+                //   spawn: false,
+                },
+            },
+            win: {
+                files: ['<%= pkg.name %>.js'],
+                tasks: ['open:win'],
                 options: {
                 //   spawn: false,
                 },
@@ -173,7 +184,9 @@ module.exports = function(grunt) {
     grunt.registerTask('dist', ['jshint', 'jscs', 'browserify', 'uglify', 'sbx']);
     grunt.registerTask('dev', ['jshint', 'jscs', 'browserify']);
     grunt.registerTask('test', ['browserify', 'scratchx',
-            'connect', 'open', 'watch']);
+            'connect', 'open:osx', 'watch:osx']);
+    grunt.registerTask('test:win', ['browserify', 'scratchx',
+            'connect', 'open:win', 'watch:win']);
 
     grunt.registerTask('default', ['dist']);
 

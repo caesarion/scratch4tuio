@@ -63,6 +63,14 @@ To run the extension during development, run
 grunt test
 ```
 
+or
+
+```bash
+grunt test:win
+```
+
+on windows.
+
 This will build the extension script, clone scratchx, start a webserver,
 open Scratch4TUIO in Chrome and watch the extension script for changes.
 
