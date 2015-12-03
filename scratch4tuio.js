@@ -17220,7 +17220,7 @@ module.exports={
                 "objectAttributes": ["Position X", "Position Y", "Angle", "Motion Speed", "Motion Accel", "Rotation Speed", "Rotation Accel", "xSpeed", "ySpeed", "symbolID", "sessionID", "scratchID"],
                 "objectStates": ["moving", "accelerating", "decelerating", "rotating"]
             },
-            "url": "http://caesarion.github.io/scratch4tuio/en.html"
+            "url": "http://caesarion.github.io/scratch4tuio/info/en.html"
         },
         "de": {
             "blocks": [
@@ -17241,7 +17241,7 @@ module.exports={
                 "objectAttributes": ["Position X", "Position Y", "Winkel", "Bewegungsgeschwindigkeit", "Bewegungsbeschleunigung", "Drehgeschwindigkeit", "Drehbeschleunigung", "xGeschwindigkeit", "yGeschwindigkeit", "Symbolnummer", "Sitzungsnummer", "Scratchnummer"],
                 "objectStates": ["in Bewegung", "am Beschleunigen", "am Bremsen", "am Drehen"]
             },
-            "url": "http://caesarion.github.io/scratch4tuio/de.html"
+            "url": "http://caesarion.github.io/scratch4tuio/info/de.html"
         },
         "fr": {
             "blocks": [
@@ -17262,7 +17262,7 @@ module.exports={
                 "objectAttributes": ["position X","position Y","angle","vitesse de mouvement","accélération de mouvement","vitesse de rotation","accélération de la rotation","xVitesse","yVitesse","numéro de symbol","numéro de session"],
                 "objectStates": ["se déplacant","en accélération","en freinant","en tournant"]
             },
-            "url": "http://caesarion.github.io/scratch4tuio/en.html"
+            "url": "http://caesarion.github.io/scratch4tuio/info/en.html"
         }
     }
 }
