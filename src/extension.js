@@ -4,21 +4,23 @@ module.exports = (function() { 'use strict';
     // initialize tuio client ------------------------------------------------------------------------------------------
 
     // list of all tuio tuio objects that were updated, added or removed
-    var tuioObjects = [];
+    var tuioObjects = {};
 
     // list of counters that holds for every symbol-id the update count
     // the counters are used to return false after the update-hat-block returned true two times.
     // Necessary for the continous execution of the update-hat-block's program stack.
-    var trueUpdateCount = [];
+    var trueUpdateCount = {};
 
     // set specific ID's -------------------------------------------------------------------------------------------
-    var cursorID = 0;
-    var latestObjectID = 1000;
+    var cursorID = 'cursor';
+    var latestObjectID = 'latest';
+    var symbolIdPrefix = 'symbol:';
+    var sessionIdPrefix = 'session:';
 
     // list of boolean values that denote whether an object with a certain symbol-id was removed
-    var remove = [];
+    var remove = {};
     // list of boolean values that denote whether an object with a certain symbol-id was added
-    var add = [];
+    var add = {};
 
     // references the latest tuio-object. Needed for the 'latest Tuio Object' block.
     var latestTuioObject = null;
@@ -48,23 +50,31 @@ module.exports = (function() { 'use strict';
     };
 
     var onAddTuioObject = function(addObject) {
-        add[addObject.symbolId] = true;
-        remove[addObject.symbolId] = null;
-        tuioObjects[addObject.symbolId] = addObject;
+        var symID = encodeID(addObject.symbolId, 'sym');
+
+        add[symID] = true;
+        remove[symID] = null;
+        tuioObjects[symID] = addObject;
         latestTuioObject = addObject;
     };
 
     var onUpdateTuioObject = function(updateObject) {
-        tuioObjects[updateObject.symbolId] = updateObject;
-        tuioObjects[-updateObject.sessionId] = updateObject;
+        var symID = encodeID(updateObject.symbolId, 'sym');
+        var sessID = encodeID(updateObject.symbolId, 'sess');
+
+        tuioObjects[symID] = updateObject;
+        tuioObjects[sessID] = updateObject;
         latestTuioObject = updateObject;
     };
 
     var onRemoveTuioObject = function(removeObject) {
-        remove[removeObject.symbolId] = removeObject;
-        add[removeObject.symbolId] = null;
-        tuioObjects[removeObject.symbolId] = null;
-        tuioObjects[-removeObject.sessionId] = null;
+        var symID = encodeID(removeObject.symbolId, 'sym');
+        var sessID = encodeID(removeObject.symbolId, 'sess');
+
+        remove[symID] = removeObject;
+        add[symID] = null;
+        tuioObjects[symID] = null;
+        tuioObjects[sessID] = null;
     };
 
     var onRefresh = function(/*time*/) {
@@ -86,12 +96,47 @@ module.exports = (function() { 'use strict';
     // end client initialisation ---------------------------------------------------------------------------------------
 
     // define helper functions that work on the input of the blocks ----------------------------------------
+    var encodeID = function(id, type) {
+        switch (type) {
+            case 'sess':
+            case 'session':
+                return sessionIdPrefix + id;
+            case 'sym':
+            case 'symbol':
+                return symbolIdPrefix + id;
+            default:
+                return -1;
+        }
+    };
+
+    // var decodeID = function(id) {
+    //     if (id.substr(0, sessionIdPrefix.length) === sessionIdPrefix) {
+    //         return id.substr(sessionIdPrefix.length);
+    //     } else if (id.substr(0, symbolIdPrefix.length) === symbolIdPrefix) {
+    //         return id.substr(symbolIdPrefix.length);
+    //     } else {
+    //         return -1;
+    //     }
+    // };
+
+    var reID = new RegExp('(' + cursorID + '|' + latestObjectID + '|' +
+            sessionIdPrefix + '\\d+|' + symbolIdPrefix + '\\d+)');
     var checkID = function(id) {
+        return reID.test(id);
+    };
+
+    var checkSymID = function(id) {
         return ((id == cursorID || (id > 0 && id < 88)) &&
                 (!isNaN(id) && (function(x) {
             return (x | 0) === x;
         })(parseFloat(id))));
     };
+
+    // var reScID = new RegExp('(' + cursorID + '|' + latestObjectID + '|' +
+    //         sessionIdPrefix + '\\d+|' + symbolIdPrefix + '\\d+)');
+    // var checkScratchID = function(id) {
+    //     return reScID.test(id);
+    // };
 
     // coordinate conversion from tuio to scratch coordinates.
     // @param: xCoordinate -> the x-coordinate value. It is a number between 0 and 1 (e.g. a procentage rate). 0 means total left, 1 means total right.
@@ -171,19 +216,24 @@ module.exports = (function() { 'use strict';
         // this method defines the behavior of the tuioObject block. It returns the id of the typed in integer value.
         // @param: id --> the typed in integer value
         tuioObject: function(id) {
-            return id;
+            return encodeID(id, 'sym');
         },
 
         // this method defines the behavior of the tuioObject SessionID block. It encodes the the typed in integer value by returning
         // -id. This way, the blocks can distinguish between sessionID and SymboldID
         // @param: id --> the typed in integer value in the block
         tuioObjectSessionID: function(id) {
-            return -id;
+            return encodeID(id, 'sess');
         },
 
         // this method defines the behavior of the tuio-cursor block. It returns the cursor id.
         tuioCursor: function() {
             return cursorID;
+        },
+
+        // this method defines the behavior of the 'latest tuio object' block. It returns the symbolID of the latest changed object.
+        getLatestTuioObject: function() {
+            return latestObjectID;
         },
 
         // the method defines the behavior of the tuio-attribute-block. Returns the value of the
@@ -204,30 +254,42 @@ module.exports = (function() { 'use strict';
             if (typeof current != 'undefined' && current != null) {
                 // switch between the selecte menu entry and return accordingly
                 switch (attributeName) {
-                    case menus.objectAttributes[0]: // case PosX
+                    case menus.objectAttributes[0]: // Posiion X
                         return convertXToScratchCoordinate(current
                                 .getX());
-                    case menus.objectAttributes[1]: // case PosY
+                    case menus.objectAttributes[1]: // Posiion Y
                         return convertYToScratchCoordinate(current
                                 .getY());
-                    case menus.objectAttributes[2]:
+                    case menus.objectAttributes[2]: // Angle
                         return current.getAngleDegrees();
-                    case menus.objectAttributes[3]:
+                    case menus.objectAttributes[3]: // Motion Speed
                         return current.getMotionSpeed();
-                    case menus.objectAttributes[4]:
+                    case menus.objectAttributes[4]: // Motion Accel
                         return current.getMotionAccel();
-                    case menus.objectAttributes[5]:
+                    case menus.objectAttributes[5]: // Rotation Speed
                         return current.getRotationSpeed();
-                    case menus.objectAttributes[6]:
+                    case menus.objectAttributes[6]: // Rotation Accel
                         return current.getRotationAccel();
-                    case menus.objectAttributes[7]:
+                    case menus.objectAttributes[7]: // xSpeed
                         return current.getXSpeed();
-                    case menus.objectAttributes[8]:
+                    case menus.objectAttributes[8]: // ySpeed
                         return current.getYSpeed();
-                    case menus.objectAttributes[9]:
+                    case menus.objectAttributes[9]: // symbolID
                         return current.symbolId;
-                    case menus.objectAttributes[10]:
+                    case menus.objectAttributes[10]: // sessionID
                         return current.sessionId;
+                    case menus.objectAttributes[11]: // scratchID
+                        if (id === latestObjectID) {
+                            if (checkSymID(latestTuioObject.symbolId)) {
+                                return encodeID(latestTuioObject.symbolId,
+                                        'sym');
+                            } else {
+                                return encodeID(latestTuioObject.sessionId,
+                                        'sess');
+                            }
+                        } else {
+                            return id;
+                        }
                 }
             } else {
                 return 'ERROR: No object with ' + id + ' on camera!';
@@ -297,11 +359,6 @@ module.exports = (function() { 'use strict';
                 }
             }
             return value;
-        },
-
-        // this method defines the behavior of the 'latest tuio object' block. It returns the symbolID of the latest changed object.
-        getLatestTuioObject: function() {
-            return latestObjectID;
         },
 
         // end block behavior definitions ----------------------------------------------------------------------------------

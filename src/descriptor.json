@@ -5,42 +5,42 @@
     "descriptors": {
         "en": {
             "blocks": [
-                ["h", "when %n changed", "updateEventHatBlock", ""],
-                ["h", "when %n added", "addEventHatBlock", ""],
-                ["h", "when %n removed", "removeEventHatBlock", ""],
+                ["h", "when %s changed", "updateEventHatBlock", ""],
+                ["h", "when %s added", "addEventHatBlock", ""],
+                ["h", "when %s removed", "removeEventHatBlock", ""],
                 ["h", "when any TUIO-Object changed", "updateOnAnyObject", ""],
                 ["--"],
                 ["r", "last changed TUIO-Object", "getLatestTuioObject", ""],
                 ["r", "TUIO-Object with Symbol ID %n", "tuioObject", ""],
                 ["r", "TUIO-Object with Session ID %n", "tuioObjectSessionID", ""],
                 ["r", "TUIO-Cursor", "tuioCursor", ""],
-                ["r", "%m.objectAttributes of %n", "getTuioAttribute", "Position X", ""],
+                ["r", "%m.objectAttributes of %s", "getTuioAttribute", "Position X", ""],
                 ["--"],
-                ["b", "%n is %m.objectStates ?", "getStateOfTuioObject", "", "moving"]
+                ["b", "%s is %m.objectStates ?", "getStateOfTuioObject", "", "moving"]
             ],
             "menus": {
-                "objectAttributes": ["Position X", "Position Y", "Angle", "Motion Speed", "Motion Accel", "Rotation Speed", "Rotation Accel", "xSpeed", "ySpeed", "symbolID", "sessionID"],
+                "objectAttributes": ["Position X", "Position Y", "Angle", "Motion Speed", "Motion Accel", "Rotation Speed", "Rotation Accel", "xSpeed", "ySpeed", "symbolID", "sessionID", "scratchID"],
                 "objectStates": ["moving", "accelerating", "decelerating", "rotating"]
             },
             "url": "http://caesarion.github.io/scratch4tuio/en.html"
         },
         "de": {
             "blocks": [
-                ["h", "Wenn sich %n verändert", "updateEventHatBlock", ""],
-                ["h", "Wenn %n hinzugefügt wird", "addEventHatBlock", ""],
-                ["h", "Wenn %n entfernt wird", "removeEventHatBlock", ""],
+                ["h", "Wenn sich %s verändert", "updateEventHatBlock", ""],
+                ["h", "Wenn %s hinzugefügt wird", "addEventHatBlock", ""],
+                ["h", "Wenn %s entfernt wird", "removeEventHatBlock", ""],
                 ["h", "Wenn irgendein TUIO-Objekt verändert wird", "updateOnAnyObject", ""],
                 ["--"],
                 ["r", "zuletzt verändertes TUIO-Objekt", "getLatestTuioObject", ""],
                 ["r", "TUIO-Objekt mit der Symbolnummer %n", "tuioObject", ""],
                 ["r", "TUIO-Objekt mit der Sitzungsnummer %n", "tuioObjectSessionID", ""],
                 ["r", "TUIO-Zeiger", "tuioCursor", ""],
-                ["r", "%m.objectAttributes von %n", "getTuioAttribute", "Position X", ""],
+                ["r", "%m.objectAttributes von %s", "getTuioAttribute", "Position X", ""],
                 ["--"],
-                ["b", "%n ist %m.objectStates ?", "getStateOfTuioObject", "", "in Bewegung"]
+                ["b", "%s ist %m.objectStates ?", "getStateOfTuioObject", "", "in Bewegung"]
             ],
             "menus": {
-                "objectAttributes": ["Position X", "Position Y", "Winkel", "Bewegungsgeschwindigkeit", "Bewegungsbeschleunigung", "Drehgeschwindigkeit", "Drehbeschleunigung", "xGeschwindigkeit", "yGeschwindigkeit", "Symbolnummer", "Sitzungsnummer"],
+                "objectAttributes": ["Position X", "Position Y", "Winkel", "Bewegungsgeschwindigkeit", "Bewegungsbeschleunigung", "Drehgeschwindigkeit", "Drehbeschleunigung", "xGeschwindigkeit", "yGeschwindigkeit", "Symbolnummer", "Sitzungsnummer", "Scratchnummer"],
                 "objectStates": ["in Bewegung", "am Beschleunigen", "am Bremsen", "am Drehen"]
             },
             "url": "http://caesarion.github.io/scratch4tuio/de.html"
