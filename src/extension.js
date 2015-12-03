@@ -292,7 +292,7 @@ module.exports = (function() { 'use strict';
                         }
                 }
             } else {
-                return 'ERROR: No object with ' + id + ' on camera!';
+                return 'ERROR: No object with id ' + id + ' recognized!';
             }
         },
 

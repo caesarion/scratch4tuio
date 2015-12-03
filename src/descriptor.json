@@ -47,22 +47,22 @@
         },
         "fr": {
             "blocks": [
-                ["h", "si %n change", "updateEventHatBlock", ""],
-                ["h", "si %n est ajouté", "addEventHatBlock", ""],
-                ["h", "si %n est effacé", "removeEventHatBlock", ""],
+                ["h", "si %s change", "updateEventHatBlock", ""],
+                ["h", "si %s est ajouté", "addEventHatBlock", ""],
+                ["h", "si %s est effacé", "removeEventHatBlock", ""],
                 ["h", "si n'importe quel objet-TUIO est changé", "updateOnAnyObject", ""],
                 ["--"],
                 ["r", "objet-TUIO changé en dernier", "getLatestTuioObject", ""],
                 ["r", "objet-TUIO avec le numéro de symbole %n", "tuioObject", ""],
                 ["r", "objet-TUIO avec le numéro de session %n", "tuioObjectSessionID", ""],
                 ["r", "curseur-TUIO", "tuioCursor", ""],
-                ["r", "%m.objectAttributes de %n", "getTuioAttribute", "Position X", ""],
+                ["r", "%m.objectAttributes de %s", "getTuioAttribute", "Position X", ""],
                 ["--"],
-                ["b", "%n est %m.objectStates ?", "getStateOfTuioObject", "", "in Bewegung"]
+                ["b", "%s est %m.objectStates ?", "getStateOfTuioObject", "", "in Bewegung"]
             ],
             "menus": {
                 "objectAttributes": ["position X","position Y","angle","vitesse de mouvement","accélération de mouvement","vitesse de rotation","accélération de la rotation","xVitesse","yVitesse","numéro de symbol","numéro de session"],
-                "objectStates": [ ]
+                "objectStates": ["se déplacant","en accélération","en freinant","en tournant"]
             },
             "url": "http://caesarion.github.io/scratch4tuio/en.html"
         }
