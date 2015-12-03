@@ -17198,7 +17198,7 @@ function toArray(list, index) {
 },{}],59:[function(require,module,exports){
 module.exports={
     "title": "Scratch4TUIO",
-    "javascriptURL": "http://caesarion.github.io/Scratch4TuioExtension/scratch4TUIOExtension.js",
+    "javascriptURL": "http://caesarion.github.io/scratch4tuio/scratch4tuio.min.js",
 
     "descriptors": {
         "en": {
@@ -17220,7 +17220,7 @@ module.exports={
                 "objectAttributes": ["Position X", "Position Y", "Angle", "Motion Speed", "Motion Accel", "Rotation Speed", "Rotation Accel", "xSpeed", "ySpeed", "symbolID", "sessionID"],
                 "objectStates": ["moving", "accelerating", "decelerating", "rotating"]
             },
-            "url": "http://caesarion.github.io/Scratch4TuioExtension/en.html"
+            "url": "http://caesarion.github.io/scratch4tuio/en.html"
         },
         "de": {
             "blocks": [
@@ -17229,7 +17229,7 @@ module.exports={
                 ["h", "Wenn %n entfernt wird", "removeEventHatBlock", ""],
                 ["h", "Wenn irgendein TUIO-Objekt verändert wird", "updateOnAnyObject", ""],
                 ["--"],
-                ["r", "zuletzt verändertes TUIO-Objekt ", "getLatestTuioObject", ""],
+                ["r", "zuletzt verändertes TUIO-Objekt", "getLatestTuioObject", ""],
                 ["r", "TUIO-Objekt mit der Symbolnummer %n", "tuioObject", ""],
                 ["r", "TUIO-Objekt mit der Sitzungsnummer %n", "tuioObjectSessionID", ""],
                 ["r", "TUIO-Zeiger", "tuioCursor", ""],
@@ -17241,7 +17241,28 @@ module.exports={
                 "objectAttributes": ["Position X", "Position Y", "Winkel", "Bewegungsgeschwindigkeit", "Bewegungsbeschleunigung", "Drehgeschwindigkeit", "Drehbeschleunigung", "xGeschwindigkeit", "yGeschwindigkeit", "Symbolnummer", "Sitzungsnummer"],
                 "objectStates": ["in Bewegung", "am Beschleunigen", "am Bremsen", "am Drehen"]
             },
-            "url": "http://caesarion.github.io/Scratch4TuioExtension/de.html"
+            "url": "http://caesarion.github.io/scratch4tuio/de.html"
+        },
+        "fr": {
+            "blocks": [
+                ["h", "si %n change", "updateEventHatBlock", ""],
+                ["h", "si %n est ajouté", "addEventHatBlock", ""],
+                ["h", "si %n est effacé", "removeEventHatBlock", ""],
+                ["h", "si n'importe quel objet-TUIO est changé", "updateOnAnyObject", ""],
+                ["--"],
+                ["r", "objet-TUIO changé en dernier", "getLatestTuioObject", ""],
+                ["r", "objet-TUIO avec le numéro de symbole %n", "tuioObject", ""],
+                ["r", "objet-TUIO avec le numéro de session %n", "tuioObjectSessionID", ""],
+                ["r", "curseur-TUIO", "tuioCursor", ""],
+                ["r", "%m.objectAttributes de %n", "getTuioAttribute", "Position X", ""],
+                ["--"],
+                ["b", "%n est %m.objectStates ?", "getStateOfTuioObject", "", "in Bewegung"]
+            ],
+            "menus": {
+                "objectAttributes": ["position X","position Y","angle","vitesse de mouvement","accélération de mouvement","vitesse de rotation","accélération de la rotation","xVitesse","yVitesse","numéro de symbol","numéro de session"],
+                "objectStates": [ ]
+            },
+            "url": "http://caesarion.github.io/scratch4tuio/en.html"
         }
     }
 }
