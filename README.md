@@ -10,7 +10,7 @@ the objects such as the symbolID, sessionID, movement speed, movement
 acceleration, position, angle, turning speed, and turning acceleration. So
 technically Scratch4TUIO transforms Scratch into a TUIO-Client. You can start
 Scratch4TUIO by just following this link:
-<http://scratchx.org/?url=http://caesarion.github.io/Scratch4TuioExtension/scratch4TUIOExtension.js#scratch>.
+<http://scratchx.org/?url=http://caesarion.github.io/scratch4tuio/scratch4tuio.min.js#scratch>.
 It basically opens Scratch with the Scratch4TUIO extension already loaded. On
 the '_More Blocks_' category you can now find the additional Scratch4TUIO
 blocks.
@@ -18,7 +18,7 @@ blocks.
 Scratch4TUIO uses an OSC-Dispatcher program that relays the incoming TUIO
 messages, which are sent via the UDP protocol, to Scratch4TUIO via _Socket.io_.
 You can download the JAR here:
-<https://github.com/caesarion/Scratch4TuioExtension/releases/tag/1.0>
+<https://github.com/caesarion/scratch4tuio-server/releases/download/v1.0.1/scratch4tuio-dispatcher.jar>
 
 Start the OSC-Dispatcher from console via
 
