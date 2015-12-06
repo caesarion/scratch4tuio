@@ -289,6 +289,7 @@ module.exports = (function(root) { 'use strict';
         yPos: null,
         currentTime: null,
         startTime: null,
+        source: '',
 
         initialize: function(params) {
             this.xPos = params.xp || 0;
@@ -688,6 +689,7 @@ module.exports = (function(root) { 'use strict';
         freeCursorList: null,
         maxCursorId: null,
         currentFrame: null,
+        sourcesList: null,
         currentTime: null,
 
         initialize: function(params) {
@@ -703,7 +705,8 @@ module.exports = (function(root) { 'use strict';
             this.frameCursors = [];
             this.freeCursorList = [];
             this.maxCursorId = -1;
-            this.currentFrame = 0;
+            this.sourcesList = [];
+            this.currentFrame = [];
             this.currentTime = null;
 
             _.bindAll(this, 'onConnect', 'acceptBundle', 'onDisconnect');
@@ -767,13 +770,18 @@ module.exports = (function(root) { 'use strict';
 
             var packets = bundle.packets;
 
+            var source = getSource(packets);
+            if(!_.includes(sourcesList,source)) {
+                sourcesList.push(source);
+            }
+
             for (var i = 0, max = packets.length; i < max; i++) {
                 var packet = packets[i];
                 switch (packet.address) {
                     // only these profiles are currently possible
                     case '/tuio/2Dobj':
                     case '/tuio/2Dcur':
-                        this.acceptMessage(packet);
+                        this.acceptMessage(packet,source);
                         break;
                     // blobs not yet implemented.
                     case '/tuio/2Dblb':
@@ -784,53 +792,63 @@ module.exports = (function(root) { 'use strict';
 
         },
 
-        acceptMessage: function(oscMessage) {
+        getSource: function (packets) {
+            var length = packet.lengths;
+            for(var i = packet.length-1; i>= 0;i--) {
+                if(packet[i].address == 'source') {
+                    return packet[i].args[1];
+                }
+            }
+            return '';
+        },
+
+        acceptMessage: function(oscMessage, source) {
             var address = oscMessage.address;
             var command = oscMessage.args[0];
             var args = oscMessage.args.slice(1, oscMessage.length);
             // distinguish between TUIO-Objects and TUIO-Cursors
             switch (address) {
                 case '/tuio/2Dobj':
-                    this.handleObjectMessage(command, args);
+                    this.handleObjectMessage(command, args, source);
                     break;
                 case '/tuio/2Dcur':
-                    this.handleCursorMessage(command, args);
+                    this.handleCursorMessage(command, args, source);
                     break;
             }
         },
 
-        handleObjectMessage: function(command, args) {
+        handleObjectMessage: function(command, args, source) {
             // distinguish between the message types
             switch (command) {
                 case 'set':
-                    this.objectSet(args);
+                    this.objectSet(args, source);
                     break;
                 case 'alive':
-                    this.objectAlive(args);
+                    this.objectAlive(args, source);
                     break;
                 case 'fseq':
-                    this.objectFseq(args);
+                    this.objectFseq(args, source);
                     break;
             }
         },
 
-        handleCursorMessage: function(command, args) {
+        handleCursorMessage: function(command, args, source) {
             // distinguish between the message types
             switch (command) {
                 case 'set':
-                    this.cursorSet(args);
+                    this.cursorSet(args, source);
                     break;
                 case 'alive':
-                    this.cursorAlive(args);
+                    this.cursorAlive(args, source);
                     break;
                 case 'fseq':
-                    this.cursorFseq(args);
+                    this.cursorFseq(args, source);
                     break;
             }
         },
 
         // updates the values of a TUIO-Object
-        objectSet: function(args) {
+        objectSet: function(args, source) {
             var sid = args[0];
             var cid = args[1];
             var xPos = args[2];
@@ -889,7 +907,7 @@ module.exports = (function(root) { 'use strict';
         },
 
         // check which TUIO-Objects are alive and update the list of living objects
-        objectAlive: function(args) {
+        objectAlive: function(args, source) {
             var removeObject = null;
             this.newObjectList = args;
             this.aliveObjectList = _.difference(
@@ -907,7 +925,7 @@ module.exports = (function(root) { 'use strict';
         },
 
         // check if the bundle was too late. If not, trigger events to eventlistener (e.g. the ExtensionObject in this case)
-        objectFseq: function(args) {
+        objectFseq: function(args, source) {
             var fseq = args[0];
             var lateFrame = false;
             var tobj = null;
@@ -1004,7 +1022,7 @@ module.exports = (function(root) { 'use strict';
             this.trigger('updateTuioObject', updateObject);
         },
         // update the values of a cursor. check if add event occured
-        cursorSet: function(args) {
+        cursorSet: function(args, source) {
             var sid = args[0];
             var xPos = args[1];
             var yPos = args[2];
@@ -1050,7 +1068,7 @@ module.exports = (function(root) { 'use strict';
             }
         },
         // check which cursors are still alive.
-        cursorAlive: function(args) {
+        cursorAlive: function(args, source) {
             var removeCursor = null;
             this.newCursorList = args;
             // compute living cursors
@@ -1067,7 +1085,7 @@ module.exports = (function(root) { 'use strict';
             }
         },
         // check currency of bundle. If it was not too late, trigger event to eventlistener (e.g. ScratchExtension Objekt)
-        cursorFseq: function(args) {
+        cursorFseq: function(args, source) {
             var fseq = args[0];
             var lateFrame = false;
             var tcur = null;
