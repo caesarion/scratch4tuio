@@ -1198,7 +1198,7 @@ module.exports = (function(root) { 'use strict';
                 si: tcur.getSessionId(),
                 ci: cid,
                 xp: tcur.getX(),
-                yp: tcur.getY()
+                yp: tcur.getY(),
                 source: source
             });
             this.cursorList[addCursor.getSessionId()] = addCursor;
