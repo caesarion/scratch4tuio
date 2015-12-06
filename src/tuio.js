@@ -824,7 +824,7 @@ module.exports = (function(root) { 'use strict';
                     this.objectSet(args, source);
                     break;
                 case 'alive':
-                    this.objectAlive(args, source);
+                    this.objectAlive(args);
                     break;
                 case 'fseq':
                     this.objectFseq(args, source);
@@ -839,7 +839,7 @@ module.exports = (function(root) { 'use strict';
                     this.cursorSet(args, source);
                     break;
                 case 'alive':
-                    this.cursorAlive(args, source);
+                    this.cursorAlive(args);
                     break;
                 case 'fseq':
                     this.cursorFseq(args, source);
@@ -866,7 +866,8 @@ module.exports = (function(root) { 'use strict';
                     sym: cid,
                     xp: xPos,
                     yp: yPos,
-                    a: angle
+                    a: angle,
+                    source: source
                 });
                 this.frameObjects.push(addObject);
             } else {
@@ -889,7 +890,8 @@ module.exports = (function(root) { 'use strict';
                         sym: cid,
                         xp: xPos,
                         yp: yPos,
-                        a: angle
+                        a: angle,
+                        source: source
                     });
                     updateObject.update({
                         xp: xPos,
@@ -907,7 +909,7 @@ module.exports = (function(root) { 'use strict';
         },
 
         // check which TUIO-Objects are alive and update the list of living objects
-        objectAlive: function(args, source) {
+        objectAlive: function(args) {
             var removeObject = null;
             this.newObjectList = args;
             this.aliveObjectList = _.difference(
@@ -954,7 +956,7 @@ module.exports = (function(root) { 'use strict';
                             this.objectRemoved(tobj);
                             break;
                         case Tuio.Object.TUIO_ADDED:
-                            this.objectAdded(tobj);
+                            this.objectAdded(tobj, source);
                             break;
                         default:
                             this.objectDefault(tobj);
@@ -979,14 +981,15 @@ module.exports = (function(root) { 'use strict';
             delete this.objectList[removeObject.getSessionId()];
         },
         //trigger add events to eventlistener (e.g. the ExtensionObject in this case)
-        objectAdded: function(tobj) {
+        objectAdded: function(tobj, source) {
             var addObject = new Tuio.Object({
                 ttime: this.currentTime,
                 si: tobj.getSessionId(),
                 sym: tobj.getSymbolId(),
                 xp: tobj.getX(),
                 yp: tobj.getY(),
-                a: tobj.getAngle()
+                a: tobj.getAngle(),
+                source: source
             });
             this.objectList[addObject.getSessionId()] = addObject;
             this.trigger('addTuioObject', addObject);
@@ -1035,7 +1038,8 @@ module.exports = (function(root) { 'use strict';
                     si: sid,
                     ci: -1,
                     xp: xPos,
-                    yp: yPos
+                    yp: yPos,
+                    source: source
                 });
                 this.frameCursors.push(addCursor);
             } else {
@@ -1054,7 +1058,8 @@ module.exports = (function(root) { 'use strict';
                         si: sid,
                         ci: tcur.getCursorId(),
                         xp: xPos,
-                        yp: yPos
+                        yp: yPos,
+                        source: source
                     });
                     updateCursor.update({
                         xp: xPos,
@@ -1115,7 +1120,7 @@ module.exports = (function(root) { 'use strict';
                             this.cursorRemoved(tcur);
                             break;
                         case Tuio.Cursor.TUIO_ADDED:
-                            this.cursorAdded(tcur);
+                            this.cursorAdded(tcur, source);
                             break;
                         default:
                             this.cursorDefault(tcur);
@@ -1164,7 +1169,7 @@ module.exports = (function(root) { 'use strict';
             }
         },
         // trigger add event for cursor to eventlistener (e.g. ScratchExtension Objekt)
-        cursorAdded: function(tcur) {
+        cursorAdded: function(tcur, source) {
             var cid = _.size(this.cursorList);
             var testCursor = null;
 
@@ -1193,6 +1198,7 @@ module.exports = (function(root) { 'use strict';
                 ci: cid,
                 xp: tcur.getX(),
                 yp: tcur.getY()
+                source: source
             });
             this.cursorList[addCursor.getSessionId()] = addCursor;
 
