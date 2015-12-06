@@ -770,8 +770,8 @@ module.exports = (function(root) { 'use strict';
 
             var packets = bundle.packets;
 
-            var source = getSource(packets);
-            if(!_.includes(sourcesList,source)) {
+            var source = this.getSource(packets);
+            if(this.sourcesList.indexOf(source) < 0) {
                 this.sourcesList.push(source);
                 this.currentFrame[source] = 0;
             }
@@ -794,13 +794,12 @@ module.exports = (function(root) { 'use strict';
         },
 
         getSource: function (packets) {
-            var length = packet.lengths;
-            for(var i = packet.length-1; i>= 0;i--) {
-                if(packet[i].address == 'source') {
-                    return packet[i].args[1];
+            for(var i = packets.length-1; i>= 0;i--) {
+                if(packets[i].address == 'source') {
+                    return packets[i].args[1];
                 }
             }
-            return '';
+            return '#noSourceTag#';
         },
 
         acceptMessage: function(oscMessage, source) {
@@ -932,7 +931,7 @@ module.exports = (function(root) { 'use strict';
             var fseq = args[0];
             var lateFrame = false;
             var tobj = null;
-
+            var frame = this.currentFrame[source];
             if (fseq > 0) {
                 if (fseq > this.currentFrame[source]) {
                     this.currentTime = Tuio.Time.getSessionTime();
