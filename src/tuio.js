@@ -772,7 +772,8 @@ module.exports = (function(root) { 'use strict';
 
             var source = getSource(packets);
             if(!_.includes(sourcesList,source)) {
-                sourcesList.push(source);
+                this.sourcesList.push(source);
+                this.currentFrame[source] = 0;
             }
 
             for (var i = 0, max = packets.length; i < max; i++) {
@@ -933,12 +934,12 @@ module.exports = (function(root) { 'use strict';
             var tobj = null;
 
             if (fseq > 0) {
-                if (fseq > this.currentFrame) {
+                if (fseq > this.currentFrame[source]) {
                     this.currentTime = Tuio.Time.getSessionTime();
                 }
-                if ((fseq >= this.currentFrame) ||
-                        ((this.currentFrame - fseq) > 100)) {
-                    this.currentFrame = fseq;
+                if ((fseq >= this.currentFrame[source]) ||
+                        ((this.currentFrame[source] - fseq) > 100)) {
+                    this.currentFrame[source] = fseq;
                 } else {
                     lateFrame = true;
                 }
@@ -1096,12 +1097,12 @@ module.exports = (function(root) { 'use strict';
             var tcur = null;
             // check with the frequence id whether the package is current or not
             if (fseq > 0) {
-                if (fseq > this.currentFrame) {
+                if (fseq > this.currentFrame[source]) {
                     this.currentTime = Tuio.Time.getSessionTime();
                 }
-                if ((fseq >= this.currentFrame) ||
-                        ((this.currentFrame - fseq) > 100)) {
-                    this.currentFrame = fseq;
+                if ((fseq >= this.currentFrame[source]) ||
+                        ((this.currentFrame[source] - fseq) > 100)) {
+                    this.currentFrame[source] = fseq;
                 } else {
                     lateFrame = true;
                 }
