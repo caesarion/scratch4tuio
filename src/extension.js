@@ -25,6 +25,9 @@ module.exports = (function() { 'use strict';
     // references the latest tuio-object. Needed for the 'latest Tuio Object' block.
     var latestTuioObject = null;
 
+    // references the latest tuio-object of a given source.
+    var latestTuioObjectFromSource = {};
+
     // the microseconds until an event expires (e.g. is not used any more)
     var expiringMicroseconds = 50000;
 
@@ -36,17 +39,27 @@ module.exports = (function() { 'use strict';
     // set the behavior of what should happen when a certain event occurs: -------------------------------------
 
     var onAddTuioCursor = function(addCursor) {
+        var cursorIDWithSourceTag = addCursor.source + cursorID;
+
+        // set without source tag
         add[cursorID] = true;
         remove[cursorID] = null;
         tuioObjects[cursorID] = addCursor;
+
+        // set with source tag
+        add[cursorIDWithSourceTag] = true;
+        remove[cursorIDWithSourceTag] = null;
+        tuioObjects[cursorIDWithSourceTag] = addCursor;
     };
 
     var onUpdateTuioCursor = function(updateCursor) {
         tuioObjects[cursorID] = updateCursor;
+        tuioObjects[updateCursor.source + cursorID] = updateCursor;
     };
 
     var onRemoveTuioCursor = function(removeCursor) {
         remove[cursorID] = removeCursor;
+        remove[removeCursor.source + cursorID] = removeCursor;
     };
 
     var onAddTuioObject = function(addObject) {
@@ -56,6 +69,16 @@ module.exports = (function() { 'use strict';
         remove[symID] = null;
         tuioObjects[symID] = addObject;
         latestTuioObject = addObject;
+        latestTuioObjectFromSource[addObject.source] = addObject;
+
+        var symIDwithSourceTag = addObject.source + symID;
+
+        add[symIDwithSourceTag] = true;
+        remove[symIDwithSourceTag] = null;
+        tuioObjects[symIDwithSourceTag] = addObject;
+        // do not use 'sess' here because the add block is not used combined with a session id, since the session id
+        // is first generated when object first spotted. Thus, the user does not need to use the session id in the add block
+
     };
 
     var onUpdateTuioObject = function(updateObject) {
@@ -65,6 +88,13 @@ module.exports = (function() { 'use strict';
         tuioObjects[symID] = updateObject;
         tuioObjects[sessID] = updateObject;
         latestTuioObject = updateObject;
+
+        var symIDwithSourceTag = updateObject.source + symID;
+        var sessIDwithSourceTag = updateObject.source + sessID;
+
+        tuioObjects[symIDwithSourceTag] = updateObject;
+        tuioObjects[sessIDwithSourceTag] = updateObject;
+         latestTuioObjectFromSource[updateObject.source] = updateObject;
     };
 
     var onRemoveTuioObject = function(removeObject) {
@@ -75,6 +105,14 @@ module.exports = (function() { 'use strict';
         add[symID] = null;
         tuioObjects[symID] = null;
         tuioObjects[sessID] = null;
+
+        var symIDwithSourceTag = updateObject.source + symID;
+        var sessIDwithSourceTag = updateObject.source + sessID;
+
+        remove[symIDwithSourceTag] = removeObject;
+        add[symIDwithSourceTag] = null;
+        tuioObjects[symIDwithSourceTag] = null;
+        tuioObjects[sessIDwithSourceTag] = null;
     };
 
     var onRefresh = function(/*time*/) {
@@ -96,6 +134,7 @@ module.exports = (function() { 'use strict';
     // end client initialisation ---------------------------------------------------------------------------------------
 
     // define helper functions that work on the input of the blocks ----------------------------------------
+
     var encodeID = function(id, type) {
         switch (type) {
             case 'sess':
@@ -119,8 +158,13 @@ module.exports = (function() { 'use strict';
     //     }
     // };
 
-    var reID = new RegExp('(' + cursorID + '|' + latestObjectID + '|' +
-            sessionIdPrefix + '\\d+|' + symbolIdPrefix + '\\d+)');
+    var reID = new RegExp(
+    '\\c+ '
+    '(' + cursorID + '|' + latestObjectID + '|' +
+            sessionIdPrefix + '\\d+|' + symbolIdPrefix + '\\d+
+    )'
+
+    );
     var checkID = function(id) {
         return reID.test(id);
     };
