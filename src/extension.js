@@ -39,7 +39,7 @@ module.exports = (function() { 'use strict';
     // set the behavior of what should happen when a certain event occurs: -------------------------------------
 
     var onAddTuioCursor = function(addCursor) {
-        var cursorIDWithSourceTag = addCursor.source + cursorID;
+        var cursorIDWithSourceTag = this.encodeIDwithSource(cursorID, addCursor.source);
 
         // set without source tag
         add[cursorID] = true;
@@ -54,12 +54,12 @@ module.exports = (function() { 'use strict';
 
     var onUpdateTuioCursor = function(updateCursor) {
         tuioObjects[cursorID] = updateCursor;
-        tuioObjects[updateCursor.source + cursorID] = updateCursor;
+        tuioObjects[encodeIDwithSource(cursorID, updateCursor.source) = updateCursor;
     };
 
     var onRemoveTuioCursor = function(removeCursor) {
         remove[cursorID] = removeCursor;
-        remove[removeCursor.source + cursorID] = removeCursor;
+        remove[encodeIDwithSource(cursorID, removeCursor.source) = removeCursor;
     };
 
     var onAddTuioObject = function(addObject) {
@@ -71,7 +71,7 @@ module.exports = (function() { 'use strict';
         latestTuioObject = addObject;
         latestTuioObjectFromSource[addObject.source] = addObject;
 
-        var symIDwithSourceTag = addObject.source + symID;
+        var symIDwithSourceTag = encodeIDwithSource(symID, addObject.source);
 
         add[symIDwithSourceTag] = true;
         remove[symIDwithSourceTag] = null;
@@ -89,12 +89,12 @@ module.exports = (function() { 'use strict';
         tuioObjects[sessID] = updateObject;
         latestTuioObject = updateObject;
 
-        var symIDwithSourceTag = updateObject.source + symID;
-        var sessIDwithSourceTag = updateObject.source + sessID;
+        var symIDwithSourceTag = encodeIDwithSource(updateObject.source, symID);
+        var sessIDwithSourceTag = encodeIDwithSource(updateObject.source ,sessID);
 
         tuioObjects[symIDwithSourceTag] = updateObject;
         tuioObjects[sessIDwithSourceTag] = updateObject;
-         latestTuioObjectFromSource[updateObject.source] = updateObject;
+        latestTuioObjectFromSource[updateObject.source] = updateObject;
     };
 
     var onRemoveTuioObject = function(removeObject) {
@@ -106,8 +106,8 @@ module.exports = (function() { 'use strict';
         tuioObjects[symID] = null;
         tuioObjects[sessID] = null;
 
-        var symIDwithSourceTag = updateObject.source + symID;
-        var sessIDwithSourceTag = updateObject.source + sessID;
+        var symIDwithSourceTag = encodeIDwithSource(removeObject.source, symID);
+        var sessIDwithSourceTag = encodeIDwithSource(removeObject.source ,sessID);
 
         remove[symIDwithSourceTag] = removeObject;
         add[symIDwithSourceTag] = null;
@@ -146,6 +146,10 @@ module.exports = (function() { 'use strict';
             default:
                 return -1;
         }
+    };
+
+    var encodeIDwithSource = function (id, source) {
+        return source + id;
     };
 
     // var decodeID = function(id) {
@@ -280,6 +284,16 @@ module.exports = (function() { 'use strict';
             return latestObjectID;
         },
 
+        // this method defines the behavior of the 'latest tuio object from source' block. It delegates the given source parameter
+        // @param: source --> the typed in source in the block
+        getLatestTuioObjectFromSource: function(source) {
+            return source;
+        },
+
+        tuioSource: function(id, source) {
+            return encodeIDwithSource(id, source);
+        },
+
         // the method defines the behavior of the tuio-attribute-block. Returns the value of the
         // given attribute with attribtueName and the tuio object with symbolID id, or the tuio-cursor, or the latest object id
         // @param: attributeName --> the name of the attribute that should be returned
@@ -291,7 +305,10 @@ module.exports = (function() { 'use strict';
             if (id == latestObjectID) {
                 current = latestTuioObject;
             } else {
-                current = tuioObjects[id];
+                current = latestTuioObjectFromSource[id];
+                if (typeof current == 'undefined' || current == null) {
+                    current = tuioObjects[id];
+                }
             }
 
             var menus = this.descriptor.menus;
@@ -351,8 +368,12 @@ module.exports = (function() { 'use strict';
             if (id == latestObjectID) {
                 current = latestTuioObject;
             } else {
-                current = tuioObjects[id];
+                current = latestTuioObjectFromSource[id];
+                if (typeof current == 'undefined' || current == null) {
+                    current = tuioObjects[id];
+                }
             }
+
             if (typeof current != 'undefined' && current != null) {
                 var menus = this.descriptor.menus;
                 var currentStatus = current.getTuioState();
@@ -405,6 +426,35 @@ module.exports = (function() { 'use strict';
             return value;
         },
 
+        // this method defines the behavior of the 'updateOnAnyFromSource' hat block. The hat block executes its command stack, if and only if
+        // there was an update on any tuio object of the given source within the last 50 ms
+        updateOnAnyObject: function(source) {
+            var id = latestObjectID + source;
+            if (trueUpdateCount[id] > 1) {
+                trueUpdateCount[id] = 0;
+                return false;
+            }
+            var current = latestTuioObjectFromSource[source];
+            if (typeof current == 'undefined' || current == null) {
+                return false;
+            }
+            // compare the times of the received Update with the current time
+            var sessionTime = Tuio.Time.getSessionTime();
+            var currentTime = current.getTuioTime();
+            var timeDiff = sessionTime.subtractTime(currentTime);
+            var value = (timeDiff.getSeconds() === 0 &&
+                    timeDiff.getMicroseconds() <= expiringMicroseconds);
+            if (value) {
+                // this mechanism is necessary due to the fact that hat blocks only fire when an up flank is received.
+                // This mechanism creates this flank
+                if (trueUpdateCount[id]) {
+                    trueUpdateCount[id]++;
+                } else {
+                    trueUpdateCount[id] = 1;
+                }
+            }
+            return value;
+        },
         // end block behavior definitions ----------------------------------------------------------------------------------
 
         // defined the shutdown behavior of the extension
