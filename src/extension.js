@@ -351,6 +351,9 @@ module.exports = (function() { 'use strict';
                         } else {
                             return id;
                         }
+                    case menus.objectAttributes[12] {
+                        return current.source;
+                    }
                 }
             } else {
                 return 'ERROR: No object with id ' + id + ' recognized!';
@@ -428,7 +431,7 @@ module.exports = (function() { 'use strict';
 
         // this method defines the behavior of the 'updateOnAnyFromSource' hat block. The hat block executes its command stack, if and only if
         // there was an update on any tuio object of the given source within the last 50 ms
-        updateOnAnyObject: function(source) {
+        updateOnAnyObjectFromSource: function(source) {
             var id = latestObjectID + source;
             if (trueUpdateCount[id] > 1) {
                 trueUpdateCount[id] = 0;
