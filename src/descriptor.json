@@ -9,17 +9,20 @@
                 ["h", "when %s added", "addEventHatBlock", ""],
                 ["h", "when %s removed", "removeEventHatBlock", ""],
                 ["h", "when any TUIO-Object changed", "updateOnAnyObject", ""],
+                ["h", "when any TUIO-Object from source %s changed", "updateOnAnyObjectFromSource", "", ""],
                 ["--"],
                 ["r", "last changed TUIO-Object", "getLatestTuioObject", ""],
+                ["r", "last changed TUIO-Object from source %s", "getLatestTuioObjectFromSource", "", ""],
                 ["r", "TUIO-Object with Symbol ID %n", "tuioObject", ""],
                 ["r", "TUIO-Object with Session ID %n", "tuioObjectSessionID", ""],
                 ["r", "TUIO-Cursor", "tuioCursor", ""],
                 ["r", "%m.objectAttributes of %s", "getTuioAttribute", "Position X", ""],
+                ["r", "%s from source %s?", "tuioSource", "", ""],
                 ["--"],
                 ["b", "%s is %m.objectStates ?", "getStateOfTuioObject", "", "moving"]
             ],
             "menus": {
-                "objectAttributes": ["Position X", "Position Y", "Angle", "Motion Speed", "Motion Accel", "Rotation Speed", "Rotation Accel", "xSpeed", "ySpeed", "symbolID", "sessionID", "scratchID"],
+                "objectAttributes": ["Position X", "Position Y", "Angle", "Motion Speed", "Motion Accel", "Rotation Speed", "Rotation Accel", "xSpeed", "ySpeed", "symbolID", "sessionID", "scratchID", "TUIO-source"],
                 "objectStates": ["moving", "accelerating", "decelerating", "rotating"]
             },
             "url": "http://caesarion.github.io/scratch4tuio/info/en.html"
