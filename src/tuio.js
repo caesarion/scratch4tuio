@@ -771,7 +771,7 @@ module.exports = (function(root) { 'use strict';
             var packets = bundle.packets;
 
             var source = this.getSource(packets);
-            if(this.sourcesList.indexOf(source) < 0) {
+            if (this.sourcesList.indexOf(source) < 0) {
                 this.sourcesList.push(source);
                 this.currentFrame[source] = 0;
             }
@@ -793,9 +793,9 @@ module.exports = (function(root) { 'use strict';
 
         },
 
-        getSource: function (packets) {
-            for(var i = packets.length-1; i>= 0;i--) {
-                if(packets[i].address == 'source') {
+        getSource: function(packets) {
+            for (var i = packets.length - 1; i >= 0; i--) {
+                if (packets[i].address == 'source') {
                     return packets[i].args[1];
                 }
             }
@@ -931,7 +931,7 @@ module.exports = (function(root) { 'use strict';
             var fseq = args[0];
             var lateFrame = false;
             var tobj = null;
-            var frame = this.currentFrame[source];
+            //var frame = this.currentFrame[source];
             if (fseq > 0) {
                 if (fseq > this.currentFrame[source]) {
                     this.currentTime = Tuio.Time.getSessionTime();
@@ -1073,7 +1073,7 @@ module.exports = (function(root) { 'use strict';
             }
         },
         // check which cursors are still alive.
-        cursorAlive: function(args, source) {
+        cursorAlive: function(args) {
             var removeCursor = null;
             this.newCursorList = args;
             // compute living cursors
@@ -1169,7 +1169,7 @@ module.exports = (function(root) { 'use strict';
             }
         },
         // trigger add event for cursor to eventlistener (e.g. ScratchExtension Objekt)
-        cursorAdded: function(tcur, source) {
+        cursorAdded: function(tcur, _source) {
             var cid = _.size(this.cursorList);
             var testCursor = null;
 
@@ -1198,7 +1198,7 @@ module.exports = (function(root) { 'use strict';
                 ci: cid,
                 xp: tcur.getX(),
                 yp: tcur.getY(),
-                source: source
+                source: _source
             });
             this.cursorList[addCursor.getSessionId()] = addCursor;
 

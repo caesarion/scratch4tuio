@@ -39,7 +39,8 @@ module.exports = (function() { 'use strict';
     // set the behavior of what should happen when a certain event occurs: -------------------------------------
 
     var onAddTuioCursor = function(addCursor) {
-        var cursorIDWithSourceTag = this.encodeIDwithSource(cursorID, addCursor.source);
+        var cursorIDWithSourceTag =
+            this.encodeIDwithSource(cursorID, addCursor.source);
 
         // set without source tag
         add[cursorID] = true;
@@ -54,12 +55,14 @@ module.exports = (function() { 'use strict';
 
     var onUpdateTuioCursor = function(updateCursor) {
         tuioObjects[cursorID] = updateCursor;
-        tuioObjects[encodeIDwithSource(cursorID, updateCursor.source) = updateCursor;
+        tuioObjects[encodeIDwithSource(cursorID, updateCursor.source)] =
+            updateCursor;
     };
 
     var onRemoveTuioCursor = function(removeCursor) {
         remove[cursorID] = removeCursor;
-        remove[encodeIDwithSource(cursorID, removeCursor.source) = removeCursor;
+        remove[encodeIDwithSource(cursorID, removeCursor.source)] =
+            removeCursor;
     };
 
     var onAddTuioObject = function(addObject) {
@@ -89,8 +92,10 @@ module.exports = (function() { 'use strict';
         tuioObjects[sessID] = updateObject;
         latestTuioObject = updateObject;
 
-        var symIDwithSourceTag = encodeIDwithSource(updateObject.source, symID);
-        var sessIDwithSourceTag = encodeIDwithSource(updateObject.source ,sessID);
+        var symIDwithSourceTag =
+            encodeIDwithSource(updateObject.source, symID);
+        var sessIDwithSourceTag =
+            encodeIDwithSource(updateObject.source ,sessID);
 
         tuioObjects[symIDwithSourceTag] = updateObject;
         tuioObjects[sessIDwithSourceTag] = updateObject;
@@ -106,8 +111,10 @@ module.exports = (function() { 'use strict';
         tuioObjects[symID] = null;
         tuioObjects[sessID] = null;
 
-        var symIDwithSourceTag = encodeIDwithSource(removeObject.source, symID);
-        var sessIDwithSourceTag = encodeIDwithSource(removeObject.source ,sessID);
+        var symIDwithSourceTag =
+            encodeIDwithSource(removeObject.source, symID);
+        var sessIDwithSourceTag =
+            encodeIDwithSource(removeObject.source ,sessID);
 
         remove[symIDwithSourceTag] = removeObject;
         add[symIDwithSourceTag] = null;
@@ -148,7 +155,7 @@ module.exports = (function() { 'use strict';
         }
     };
 
-    var encodeIDwithSource = function (id, source) {
+    var encodeIDwithSource = function(id, source) {
         return source + id;
     };
 
@@ -162,13 +169,9 @@ module.exports = (function() { 'use strict';
     //     }
     // };
 
-    var reID = new RegExp(
-    '\\c+ '
-    '(' + cursorID + '|' + latestObjectID + '|' +
-            sessionIdPrefix + '\\d+|' + symbolIdPrefix + '\\d+
-    )'
+    var reID = new RegExp('\\c+ ' + '(' + cursorID + '|' + latestObjectID +
+        '|' + sessionIdPrefix + '\\d+|' + symbolIdPrefix + '\\d+' + ')');
 
-    );
     var checkID = function(id) {
         return reID.test(id);
     };
@@ -351,9 +354,9 @@ module.exports = (function() { 'use strict';
                         } else {
                             return id;
                         }
-                    case menus.objectAttributes[12] {
+                        break;
+                    case menus.objectAttributes[12]:
                         return current.source;
-                    }
                 }
             } else {
                 return 'ERROR: No object with id ' + id + ' recognized!';
