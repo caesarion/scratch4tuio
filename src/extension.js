@@ -40,7 +40,7 @@ module.exports = (function() { 'use strict';
 
     var onAddTuioCursor = function(addCursor) {
         var cursorIDWithSourceTag =
-            this.encodeIDwithSource(cursorID, addCursor.source);
+            encodeIDwithSource(cursorID, addCursor.source);
 
         // set without source tag
         add[cursorID] = true;

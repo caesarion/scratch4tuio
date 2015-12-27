@@ -17311,17 +17311,20 @@ module.exports={
                 ["h", "when %s added", "addEventHatBlock", ""],
                 ["h", "when %s removed", "removeEventHatBlock", ""],
                 ["h", "when any TUIO-Object changed", "updateOnAnyObject", ""],
+                ["h", "when any TUIO-Object from source %s changed", "updateOnAnyObjectFromSource", "", ""],
                 ["--"],
                 ["r", "last changed TUIO-Object", "getLatestTuioObject", ""],
+                ["r", "last changed TUIO-Object from source %s", "getLatestTuioObjectFromSource", "", ""],
                 ["r", "TUIO-Object with Symbol ID %n", "tuioObject", ""],
                 ["r", "TUIO-Object with Session ID %n", "tuioObjectSessionID", ""],
                 ["r", "TUIO-Cursor", "tuioCursor", ""],
                 ["r", "%m.objectAttributes of %s", "getTuioAttribute", "Position X", ""],
+                ["r", "%s from source %s?", "tuioSource", "", ""],
                 ["--"],
                 ["b", "%s is %m.objectStates ?", "getStateOfTuioObject", "", "moving"]
             ],
             "menus": {
-                "objectAttributes": ["Position X", "Position Y", "Angle", "Motion Speed", "Motion Accel", "Rotation Speed", "Rotation Accel", "xSpeed", "ySpeed", "symbolID", "sessionID", "scratchID"],
+                "objectAttributes": ["Position X", "Position Y", "Angle", "Motion Speed", "Motion Accel", "Rotation Speed", "Rotation Accel", "xSpeed", "ySpeed", "symbolID", "sessionID", "scratchID", "TUIO-source"],
                 "objectStates": ["moving", "accelerating", "decelerating", "rotating"]
             },
             "url": "http://caesarion.github.io/scratch4tuio/info/en.html"
@@ -17399,6 +17402,9 @@ module.exports = (function() { 'use strict';
     // references the latest tuio-object. Needed for the 'latest Tuio Object' block.
     var latestTuioObject = null;
 
+    // references the latest tuio-object of a given source.
+    var latestTuioObjectFromSource = {};
+
     // the microseconds until an event expires (e.g. is not used any more)
     var expiringMicroseconds = 50000;
 
@@ -17410,17 +17416,30 @@ module.exports = (function() { 'use strict';
     // set the behavior of what should happen when a certain event occurs: -------------------------------------
 
     var onAddTuioCursor = function(addCursor) {
+        var cursorIDWithSourceTag =
+            encodeIDwithSource(cursorID, addCursor.source);
+
+        // set without source tag
         add[cursorID] = true;
         remove[cursorID] = null;
         tuioObjects[cursorID] = addCursor;
+
+        // set with source tag
+        add[cursorIDWithSourceTag] = true;
+        remove[cursorIDWithSourceTag] = null;
+        tuioObjects[cursorIDWithSourceTag] = addCursor;
     };
 
     var onUpdateTuioCursor = function(updateCursor) {
         tuioObjects[cursorID] = updateCursor;
+        tuioObjects[encodeIDwithSource(cursorID, updateCursor.source)] =
+            updateCursor;
     };
 
     var onRemoveTuioCursor = function(removeCursor) {
         remove[cursorID] = removeCursor;
+        remove[encodeIDwithSource(cursorID, removeCursor.source)] =
+            removeCursor;
     };
 
     var onAddTuioObject = function(addObject) {
@@ -17430,6 +17449,16 @@ module.exports = (function() { 'use strict';
         remove[symID] = null;
         tuioObjects[symID] = addObject;
         latestTuioObject = addObject;
+        latestTuioObjectFromSource[addObject.source] = addObject;
+
+        var symIDwithSourceTag = encodeIDwithSource(symID, addObject.source);
+
+        add[symIDwithSourceTag] = true;
+        remove[symIDwithSourceTag] = null;
+        tuioObjects[symIDwithSourceTag] = addObject;
+        // do not use 'sess' here because the add block is not used combined with a session id, since the session id
+        // is first generated when object first spotted. Thus, the user does not need to use the session id in the add block
+
     };
 
     var onUpdateTuioObject = function(updateObject) {
@@ -17439,6 +17468,15 @@ module.exports = (function() { 'use strict';
         tuioObjects[symID] = updateObject;
         tuioObjects[sessID] = updateObject;
         latestTuioObject = updateObject;
+
+        var symIDwithSourceTag =
+            encodeIDwithSource(updateObject.source, symID);
+        var sessIDwithSourceTag =
+            encodeIDwithSource(updateObject.source ,sessID);
+
+        tuioObjects[symIDwithSourceTag] = updateObject;
+        tuioObjects[sessIDwithSourceTag] = updateObject;
+        latestTuioObjectFromSource[updateObject.source] = updateObject;
     };
 
     var onRemoveTuioObject = function(removeObject) {
@@ -17449,6 +17487,16 @@ module.exports = (function() { 'use strict';
         add[symID] = null;
         tuioObjects[symID] = null;
         tuioObjects[sessID] = null;
+
+        var symIDwithSourceTag =
+            encodeIDwithSource(removeObject.source, symID);
+        var sessIDwithSourceTag =
+            encodeIDwithSource(removeObject.source ,sessID);
+
+        remove[symIDwithSourceTag] = removeObject;
+        add[symIDwithSourceTag] = null;
+        tuioObjects[symIDwithSourceTag] = null;
+        tuioObjects[sessIDwithSourceTag] = null;
     };
 
     var onRefresh = function(/*time*/) {
@@ -17470,6 +17518,7 @@ module.exports = (function() { 'use strict';
     // end client initialisation ---------------------------------------------------------------------------------------
 
     // define helper functions that work on the input of the blocks ----------------------------------------
+
     var encodeID = function(id, type) {
         switch (type) {
             case 'sess':
@@ -17483,6 +17532,10 @@ module.exports = (function() { 'use strict';
         }
     };
 
+    var encodeIDwithSource = function(id, source) {
+        return source + id;
+    };
+
     // var decodeID = function(id) {
     //     if (id.substr(0, sessionIdPrefix.length) === sessionIdPrefix) {
     //         return id.substr(sessionIdPrefix.length);
@@ -17493,8 +17546,9 @@ module.exports = (function() { 'use strict';
     //     }
     // };
 
-    var reID = new RegExp('(' + cursorID + '|' + latestObjectID + '|' +
-            sessionIdPrefix + '\\d+|' + symbolIdPrefix + '\\d+)');
+    var reID = new RegExp('\\c+ ' + '(' + cursorID + '|' + latestObjectID +
+        '|' + sessionIdPrefix + '\\d+|' + symbolIdPrefix + '\\d+' + ')');
+
     var checkID = function(id) {
         return reID.test(id);
     };
@@ -17610,6 +17664,16 @@ module.exports = (function() { 'use strict';
             return latestObjectID;
         },
 
+        // this method defines the behavior of the 'latest tuio object from source' block. It delegates the given source parameter
+        // @param: source --> the typed in source in the block
+        getLatestTuioObjectFromSource: function(source) {
+            return source;
+        },
+
+        tuioSource: function(id, source) {
+            return encodeIDwithSource(id, source);
+        },
+
         // the method defines the behavior of the tuio-attribute-block. Returns the value of the
         // given attribute with attribtueName and the tuio object with symbolID id, or the tuio-cursor, or the latest object id
         // @param: attributeName --> the name of the attribute that should be returned
@@ -17621,7 +17685,10 @@ module.exports = (function() { 'use strict';
             if (id == latestObjectID) {
                 current = latestTuioObject;
             } else {
-                current = tuioObjects[id];
+                current = latestTuioObjectFromSource[id];
+                if (typeof current == 'undefined' || current == null) {
+                    current = tuioObjects[id];
+                }
             }
 
             var menus = this.descriptor.menus;
@@ -17664,6 +17731,9 @@ module.exports = (function() { 'use strict';
                         } else {
                             return id;
                         }
+                        break;
+                    case menus.objectAttributes[12]:
+                        return current.source;
                 }
             } else {
                 return 'ERROR: No object with id ' + id + ' recognized!';
@@ -17681,8 +17751,12 @@ module.exports = (function() { 'use strict';
             if (id == latestObjectID) {
                 current = latestTuioObject;
             } else {
-                current = tuioObjects[id];
+                current = latestTuioObjectFromSource[id];
+                if (typeof current == 'undefined' || current == null) {
+                    current = tuioObjects[id];
+                }
             }
+
             if (typeof current != 'undefined' && current != null) {
                 var menus = this.descriptor.menus;
                 var currentStatus = current.getTuioState();
@@ -17735,6 +17809,35 @@ module.exports = (function() { 'use strict';
             return value;
         },
 
+        // this method defines the behavior of the 'updateOnAnyFromSource' hat block. The hat block executes its command stack, if and only if
+        // there was an update on any tuio object of the given source within the last 50 ms
+        updateOnAnyObjectFromSource: function(source) {
+            var id = latestObjectID + source;
+            if (trueUpdateCount[id] > 1) {
+                trueUpdateCount[id] = 0;
+                return false;
+            }
+            var current = latestTuioObjectFromSource[source];
+            if (typeof current == 'undefined' || current == null) {
+                return false;
+            }
+            // compare the times of the received Update with the current time
+            var sessionTime = Tuio.Time.getSessionTime();
+            var currentTime = current.getTuioTime();
+            var timeDiff = sessionTime.subtractTime(currentTime);
+            var value = (timeDiff.getSeconds() === 0 &&
+                    timeDiff.getMicroseconds() <= expiringMicroseconds);
+            if (value) {
+                // this mechanism is necessary due to the fact that hat blocks only fire when an up flank is received.
+                // This mechanism creates this flank
+                if (trueUpdateCount[id]) {
+                    trueUpdateCount[id]++;
+                } else {
+                    trueUpdateCount[id] = 1;
+                }
+            }
+            return value;
+        },
         // end block behavior definitions ----------------------------------------------------------------------------------
 
         // defined the shutdown behavior of the extension
@@ -17773,7 +17876,7 @@ var data = require('./descriptor.json');
         }
     }
 
-    // merge objects<xy
+    // merge objects
     for (var attrname in ext) {
         if (ext.hasOwnProperty(attrname)) {
             e[attrname] = ext[attrname];
@@ -18080,7 +18183,7 @@ module.exports = (function(root) { 'use strict';
         yPos: null,
         currentTime: null,
         startTime: null,
-        source: '',
+        source: null,
 
         initialize: function(params) {
             this.xPos = params.xp || 0;
@@ -18088,6 +18191,7 @@ module.exports = (function(root) { 'use strict';
             this.currentTime = Tuio.Time.fromTime(params.ttime ||
                     Tuio.Time.getSessionTime());
             this.startTime = Tuio.Time.fromTime(this.currentTime);
+            this.source = params.source;
         },
 
         update: function(params) {
@@ -18562,7 +18666,7 @@ module.exports = (function(root) { 'use strict';
             var packets = bundle.packets;
 
             var source = this.getSource(packets);
-            if(this.sourcesList.indexOf(source) < 0) {
+            if (this.sourcesList.indexOf(source) < 0) {
                 this.sourcesList.push(source);
                 this.currentFrame[source] = 0;
             }
@@ -18584,9 +18688,9 @@ module.exports = (function(root) { 'use strict';
 
         },
 
-        getSource: function (packets) {
-            for(var i = packets.length-1; i>= 0;i--) {
-                if(packets[i].address == 'source') {
+        getSource: function(packets) {
+            for (var i = packets.length - 1; i >= 0; i--) {
+                if (packets[i].address == 'source') {
                     return packets[i].args[1];
                 }
             }
@@ -18722,7 +18826,7 @@ module.exports = (function(root) { 'use strict';
             var fseq = args[0];
             var lateFrame = false;
             var tobj = null;
-            var frame = this.currentFrame[source];
+            //var frame = this.currentFrame[source];
             if (fseq > 0) {
                 if (fseq > this.currentFrame[source]) {
                     this.currentTime = Tuio.Time.getSessionTime();
@@ -18864,7 +18968,7 @@ module.exports = (function(root) { 'use strict';
             }
         },
         // check which cursors are still alive.
-        cursorAlive: function(args, source) {
+        cursorAlive: function(args) {
             var removeCursor = null;
             this.newCursorList = args;
             // compute living cursors
@@ -18960,7 +19064,7 @@ module.exports = (function(root) { 'use strict';
             }
         },
         // trigger add event for cursor to eventlistener (e.g. ScratchExtension Objekt)
-        cursorAdded: function(tcur, source) {
+        cursorAdded: function(tcur, _source) {
             var cid = _.size(this.cursorList);
             var testCursor = null;
 
@@ -18989,7 +19093,7 @@ module.exports = (function(root) { 'use strict';
                 ci: cid,
                 xp: tcur.getX(),
                 yp: tcur.getY(),
-                source: source
+                source: _source
             });
             this.cursorList[addCursor.getSessionId()] = addCursor;
 

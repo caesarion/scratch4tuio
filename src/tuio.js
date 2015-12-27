@@ -289,7 +289,7 @@ module.exports = (function(root) { 'use strict';
         yPos: null,
         currentTime: null,
         startTime: null,
-        source: '',
+        source: null,
 
         initialize: function(params) {
             this.xPos = params.xp || 0;
@@ -297,6 +297,7 @@ module.exports = (function(root) { 'use strict';
             this.currentTime = Tuio.Time.fromTime(params.ttime ||
                     Tuio.Time.getSessionTime());
             this.startTime = Tuio.Time.fromTime(this.currentTime);
+            this.source = params.source;
         },
 
         update: function(params) {
