@@ -800,7 +800,7 @@ module.exports = (function(root) { 'use strict';
 
         getSource: function(packets) {
             for (var i = packets.length - 1; i >= 0; i--) {
-                if (packets[i].address == 'source') {
+                if (packets[i].args[0].toLowerCase() == 'source') {
                     return packets[i].args[1];
                 }
             }
@@ -824,7 +824,7 @@ module.exports = (function(root) { 'use strict';
 
         handleObjectMessage: function(command, args, source) {
             // distinguish between the message types
-            switch (command) {
+            switch (command.toLowerCase()) {
                 case 'set':
                     this.objectSet(args, source);
                     break;
@@ -931,7 +931,8 @@ module.exports = (function(root) { 'use strict';
             }
         },
 
-        // check if the bundle was too late. If not, trigger events to eventlistener (e.g. the ExtensionObject in this case)
+        // check if the bundle was too late. If not, trigger events
+        // to eventlistener (e.g. the ExtensionObject in this case)
         objectFseq: function(args, source) {
             var fseq = args[0];
             var lateFrame = false;
@@ -1094,7 +1095,8 @@ module.exports = (function(root) { 'use strict';
                 }
             }
         },
-        // check currency of bundle. If it was not too late, trigger event to eventlistener (e.g. ScratchExtension Objekt)
+        // check currency of bundle. If it was not too late, trigger event
+        // to eventlistener (e.g. ScratchExtension Objekt)
         cursorFseq: function(args, source) {
             var fseq = args[0];
             var lateFrame = false;
@@ -1156,7 +1158,7 @@ module.exports = (function(root) { 'use strict';
                 this.maxCursorId = -1;
                 if (_.size(this.cursorList[currentSource]) > 0) {
                     var maxCursor = _.max(this.cursorList[currentSource], function(cur) {
-                            return cur.getCursorId();
+                        return cur.getCursorId();
                     });
                     if (maxCursor.getCursorId() > this.maxCursorId) {
                         this.maxCursorId = maxCursor.getCursorId();
