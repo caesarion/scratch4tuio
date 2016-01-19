@@ -744,12 +744,12 @@ module.exports = (function(root) { 'use strict';
             return this.connected;
         },
         // get all TUIO-Objects, TUIO-Cursor etc.
-        getTuioObjects: function() {
-            return _.clone(this.objectList);
+        getTuioObjects: function(source) {
+            return _.clone(this.objectList[source]);
         },
 
-        getTuioCursors: function() {
-            return _.clone(this.cursorList);
+        getTuioCursors: function(source) {
+            return _.clone(this.cursorList[source]);
         },
         // get an object with certain SessionID
         getTuioObject: function(sid, source) {
@@ -922,8 +922,8 @@ module.exports = (function(root) { 'use strict';
                     this.newObjectList
                 );
 
-            for (var i = 0, max = this.aliveObjectList.length; i < max; i++) {
-                removeObject = this.objectList[source][this.aliveObjectList[i]];
+            for (var i = 0, max = this.aliveObjectList[source].length; i < max; i++) {
+                removeObject = this.objectList[source][this.aliveObjectList[source][i]];
                 if (removeObject) {
                     removeObject.remove(this.currentTime);
                     this.frameObjects.push(removeObject);
@@ -972,8 +972,8 @@ module.exports = (function(root) { 'use strict';
 
                 this.trigger('refresh', Tuio.Time.fromTime(this.currentTime));
 
-                var buffer = this.aliveObjectList;
-                this.aliveObjectList = this.newObjectList;
+                var buffer = this.aliveObjectList[source];
+                this.aliveObjectList[source] = this.newObjectList;
                 this.newObjectList = buffer;
             }
 
@@ -1086,9 +1086,9 @@ module.exports = (function(root) { 'use strict';
             this.aliveCursorList[source] = _.difference(this.aliveCursorList[source],
                     this.newCursorList);
 
-            for (var i = 0, max = this.aliveCursorList.length; i < max; i++) {
+            for (var i = 0, max = this.aliveCursorList[source].length; i < max; i++) {
                 // determine remove events
-                removeCursor = this.cursorList[source][this.aliveCursorList[i]];
+                removeCursor = this.cursorList[source][this.aliveCursorList[source][i]];
                 if (removeCursor) {
                     removeCursor.remove(this.currentTime);
                     this.frameCursors.push(removeCursor);
@@ -1137,8 +1137,8 @@ module.exports = (function(root) { 'use strict';
 
                 this.trigger('refresh', Tuio.Time.fromTime(this.currentTime));
 
-                var buffer = this.aliveCursorList;
-                this.aliveCursorList = this.newCursorList;
+                var buffer = this.aliveCursorList[source];
+                this.aliveCursorList[source] = this.newCursorList;
                 this.newCursorList = buffer;
             }
 

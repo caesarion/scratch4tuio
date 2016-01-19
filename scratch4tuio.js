@@ -1,6 +1,6 @@
 /*!
  * Scratch4TUIO v0.9.1 (https://github.com/caesarion/Scratch4TuioExtension)
- * Copyright 2015-2015 Sebastian Thiele <s.thiele87@yahoo.de>
+ * Copyright 2015-2016 Sebastian Thiele <s.thiele87@yahoo.de>
  * Licensed under the GPL-2.0 license
  */
 
@@ -17456,8 +17456,10 @@ module.exports = (function() { 'use strict';
         add[symIDwithSourceTag] = true;
         remove[symIDwithSourceTag] = null;
         tuioObjects[symIDwithSourceTag] = addObject;
-        // do not use 'sess' here because the add block is not used combined with a session id, since the session id
-        // is first generated when object first spotted. Thus, the user does not need to use the session id in the add block
+        // do not use 'sess' here because the add block is not used combined
+        // with a session id, since the session id
+        // is first generated when object first spotted. Thus, the user
+        // does not need to use the session id in the add block
 
     };
 
@@ -17515,7 +17517,7 @@ module.exports = (function() { 'use strict';
     // if there is no connection possible, the event based socket.io client assures to reconnect as soon as
     // the server is available
     client.connect();
-    // end client initialisation ---------------------------------------------------------------------------------------
+    // end client initialisation -----------------------------------------------------------------------------------
 
     // define helper functions that work on the input of the blocks ----------------------------------------
 
@@ -17567,13 +17569,15 @@ module.exports = (function() { 'use strict';
     // };
 
     // coordinate conversion from tuio to scratch coordinates.
-    // @param: xCoordinate -> the x-coordinate value. It is a number between 0 and 1 (e.g. a procentage rate). 0 means total left, 1 means total right.
+    // @param: xCoordinate -> the x-coordinate value. It is a number
+    // between 0 and 1 (e.g. a procentage rate). 0 means total left, 1 means total right.
     // @result: the x value in scratch coordinates. A value between -240 (total left) and + 240 (total right)
     var convertXToScratchCoordinate = function(xCoordinate) {
         return Math.round(-240.0 + 480.0 * xCoordinate);
     };
     // coordinate conversion from tuio to scratch coordinates.
-    // @param: yCoordinate --> the y-coordinate value. It is a number between 0 and 1 (e.g. a procentage rate). 0 means top, 1 means bottom
+    // @param: yCoordinate --> the y-coordinate value. It is a number between 0 and 1
+    // (e.g. a procentage rate). 0 means top, 1 means bottom
     // @result: the y value in scratch coordinates. A value between +180 (top) and -180 (bottom)
     var convertYToScratchCoordinate = function(yCoordinate) {
         return Math.round(180.0 - 360.0 * yCoordinate);
@@ -17581,10 +17585,12 @@ module.exports = (function() { 'use strict';
 
     // Expose extension interface to module.exports
     return {
-        // begin definition of block behavior ------------------------------------------------------------------------------
+        // begin definition of block behavior ---------------------------------------------------------------------
 
-        // this method defines the behavior of the update-event-hat-block. It is continuously executed by the scratch-flash-app, for every instantiated update-hat-block.
-        // The update-event-block executes is command stack, if and only if the tuio object with the given symbolID is updated within the last 50 ms.
+        // this method defines the behavior of the update-event-hat-block. It is continuously
+        // executed by the scratch-flash-app, for every instantiated update-hat-block.
+        // The update-event-block executes is command stack, if and only if the tuio object
+        // with the given symbolID is updated within the last 50 ms.
         // @param: id --> the symbolID of the object that should be checked for updates.
         updateEventHatBlock: function(id) {
             if (trueUpdateCount[id] > 1) {
@@ -17614,7 +17620,8 @@ module.exports = (function() { 'use strict';
 
         },
 
-        // this method defines the behavior of the add-event-hat-block. It is continuously executed by the scratch-flash-app, for every instantiated add-hat-block.
+        // this method defines the behavior of the add-event-hat-block. It is continuously executed
+        // by the scratch-flash-app, for every instantiated add-hat-block.
         // @param: id --> the symbolID of the object that should be checked for addings.
         addEventHatBlock: function(id) {
             if (checkID(id) === true) {
@@ -17629,7 +17636,8 @@ module.exports = (function() { 'use strict';
             }
         },
 
-        // this method defines the behavior of the remove-event-hat-block. It is continuously executed by the scratch-flash-app, for every instantiated remove-hat-block.
+        // this method defines the behavior of the remove-event-hat-block. It is continuously
+        // executed by the scratch-flash-app, for every instantiated remove-hat-block.
         // @param: id --> the symbolID of the object that should be checked for removals.
         removeEventHatBlock: function(id) {
             var current = remove[id];
@@ -17647,8 +17655,8 @@ module.exports = (function() { 'use strict';
             return encodeID(id, 'sym');
         },
 
-        // this method defines the behavior of the tuioObject SessionID block. It encodes the the typed in integer value by returning
-        // -id. This way, the blocks can distinguish between sessionID and SymboldID
+        // this method defines the behavior of the tuioObject SessionID block. It encodes the the typed
+        // in integer value by returning -id. This way, the blocks can distinguish between sessionID and SymboldID
         // @param: id --> the typed in integer value in the block
         tuioObjectSessionID: function(id) {
             return encodeID(id, 'sess');
@@ -17659,12 +17667,14 @@ module.exports = (function() { 'use strict';
             return cursorID;
         },
 
-        // this method defines the behavior of the 'latest tuio object' block. It returns the symbolID of the latest changed object.
+        // this method defines the behavior of the 'latest tuio object' block. It returns the
+        // symbolID of the latest changed object.
         getLatestTuioObject: function() {
             return latestObjectID;
         },
 
-        // this method defines the behavior of the 'latest tuio object from source' block. It delegates the given source parameter
+        // this method defines the behavior of the 'latest tuio object from source' block.
+        // It delegates the given source parameter
         // @param: source --> the typed in source in the block
         getLatestTuioObjectFromSource: function(source) {
             return source;
@@ -18638,12 +18648,12 @@ module.exports = (function(root) { 'use strict';
             return this.connected;
         },
         // get all TUIO-Objects, TUIO-Cursor etc.
-        getTuioObjects: function() {
-            return _.clone(this.objectList);
+        getTuioObjects: function(source) {
+            return _.clone(this.objectList[source]);
         },
 
-        getTuioCursors: function() {
-            return _.clone(this.cursorList);
+        getTuioCursors: function(source) {
+            return _.clone(this.cursorList[source]);
         },
         // get an object with certain SessionID
         getTuioObject: function(sid, source) {
@@ -18694,7 +18704,7 @@ module.exports = (function(root) { 'use strict';
 
         getSource: function(packets) {
             for (var i = packets.length - 1; i >= 0; i--) {
-                if (packets[i].address == 'source') {
+                if (packets[i].args[0].toLowerCase() == 'source') {
                     return packets[i].args[1];
                 }
             }
@@ -18718,7 +18728,7 @@ module.exports = (function(root) { 'use strict';
 
         handleObjectMessage: function(command, args, source) {
             // distinguish between the message types
-            switch (command) {
+            switch (command.toLowerCase()) {
                 case 'set':
                     this.objectSet(args, source);
                     break;
@@ -18816,8 +18826,8 @@ module.exports = (function(root) { 'use strict';
                     this.newObjectList
                 );
 
-            for (var i = 0, max = this.aliveObjectList.length; i < max; i++) {
-                removeObject = this.objectList[source][this.aliveObjectList[i]];
+            for (var i = 0, max = this.aliveObjectList[source].length; i < max; i++) {
+                removeObject = this.objectList[source][this.aliveObjectList[source][i]];
                 if (removeObject) {
                     removeObject.remove(this.currentTime);
                     this.frameObjects.push(removeObject);
@@ -18825,7 +18835,8 @@ module.exports = (function(root) { 'use strict';
             }
         },
 
-        // check if the bundle was too late. If not, trigger events to eventlistener (e.g. the ExtensionObject in this case)
+        // check if the bundle was too late. If not, trigger events
+        // to eventlistener (e.g. the ExtensionObject in this case)
         objectFseq: function(args, source) {
             var fseq = args[0];
             var lateFrame = false;
@@ -18865,8 +18876,8 @@ module.exports = (function(root) { 'use strict';
 
                 this.trigger('refresh', Tuio.Time.fromTime(this.currentTime));
 
-                var buffer = this.aliveObjectList;
-                this.aliveObjectList = this.newObjectList;
+                var buffer = this.aliveObjectList[source];
+                this.aliveObjectList[source] = this.newObjectList;
                 this.newObjectList = buffer;
             }
 
@@ -18979,16 +18990,17 @@ module.exports = (function(root) { 'use strict';
             this.aliveCursorList[source] = _.difference(this.aliveCursorList[source],
                     this.newCursorList);
 
-            for (var i = 0, max = this.aliveCursorList.length; i < max; i++) {
+            for (var i = 0, max = this.aliveCursorList[source].length; i < max; i++) {
                 // determine remove events
-                removeCursor = this.cursorList[source][this.aliveCursorList[i]];
+                removeCursor = this.cursorList[source][this.aliveCursorList[source][i]];
                 if (removeCursor) {
                     removeCursor.remove(this.currentTime);
                     this.frameCursors.push(removeCursor);
                 }
             }
         },
-        // check currency of bundle. If it was not too late, trigger event to eventlistener (e.g. ScratchExtension Objekt)
+        // check currency of bundle. If it was not too late, trigger event
+        // to eventlistener (e.g. ScratchExtension Objekt)
         cursorFseq: function(args, source) {
             var fseq = args[0];
             var lateFrame = false;
@@ -19029,8 +19041,8 @@ module.exports = (function(root) { 'use strict';
 
                 this.trigger('refresh', Tuio.Time.fromTime(this.currentTime));
 
-                var buffer = this.aliveCursorList;
-                this.aliveCursorList = this.newCursorList;
+                var buffer = this.aliveCursorList[source];
+                this.aliveCursorList[source] = this.newCursorList;
                 this.newCursorList = buffer;
             }
 
@@ -19050,7 +19062,7 @@ module.exports = (function(root) { 'use strict';
                 this.maxCursorId = -1;
                 if (_.size(this.cursorList[currentSource]) > 0) {
                     var maxCursor = _.max(this.cursorList[currentSource], function(cur) {
-                            return cur.getCursorId();
+                        return cur.getCursorId();
                     });
                     if (maxCursor.getCursorId() > this.maxCursorId) {
                         this.maxCursorId = maxCursor.getCursorId();
