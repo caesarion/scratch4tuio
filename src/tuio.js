@@ -289,6 +289,7 @@ module.exports = (function(root) { 'use strict';
         yPos: null,
         currentTime: null,
         startTime: null,
+        source: null,
 
         initialize: function(params) {
             this.xPos = params.xp || 0;
@@ -296,6 +297,7 @@ module.exports = (function(root) { 'use strict';
             this.currentTime = Tuio.Time.fromTime(params.ttime ||
                     Tuio.Time.getSessionTime());
             this.startTime = Tuio.Time.fromTime(this.currentTime);
+            this.source = params.source;
         },
 
         update: function(params) {
@@ -688,22 +690,24 @@ module.exports = (function(root) { 'use strict';
         freeCursorList: null,
         maxCursorId: null,
         currentFrame: null,
+        sourcesList: null,
         currentTime: null,
 
         initialize: function(params) {
             this.host = params.host;
             this.connected = false;
-            this.objectList = {};
-            this.aliveObjectList = [];
+            this.objectList = []; // stores sid
+            this.aliveObjectList = []; // stores sid
             this.newObjectList = [];
-            this.cursorList = {};
-            this.aliveCursorList = [];
+            this.cursorList = []; // stores sid
+            this.aliveCursorList = []; // stores sid
             this.newCursorList = [];
             this.frameObjects = [];
             this.frameCursors = [];
             this.freeCursorList = [];
             this.maxCursorId = -1;
-            this.currentFrame = 0;
+            this.sourcesList = [];
+            this.currentFrame = [];
             this.currentTime = null;
 
             _.bindAll(this, 'onConnect', 'acceptBundle', 'onDisconnect');
@@ -740,20 +744,20 @@ module.exports = (function(root) { 'use strict';
             return this.connected;
         },
         // get all TUIO-Objects, TUIO-Cursor etc.
-        getTuioObjects: function() {
-            return _.clone(this.objectList);
+        getTuioObjects: function(source) {
+            return _.clone(this.objectList[source]);
         },
 
-        getTuioCursors: function() {
-            return _.clone(this.cursorList);
+        getTuioCursors: function(source) {
+            return _.clone(this.cursorList[source]);
         },
         // get an object with certain SessionID
-        getTuioObject: function(sid) {
-            return this.objectList[sid];
+        getTuioObject: function(sid, source) {
+            return this.objectList[source][sid];
         },
         // get an cursor with certain SessionID
-        getTuioCursor: function(sid) {
-            return this.cursorList[sid];
+        getTuioCursor: function(sid, source) {
+            return this.cursorList[source][sid];
         },
 
         // decompose the TUIO-Bundel
@@ -767,13 +771,23 @@ module.exports = (function(root) { 'use strict';
 
             var packets = bundle.packets;
 
+            var source = this.getSource(packets);
+            if (this.sourcesList.indexOf(source) < 0) {
+                this.sourcesList.push(source);
+                this.currentFrame[source] = 0;
+                this.objectList[source] = {};
+                this.cursorList[source] = {};
+                this.aliveCursorList[source] = {};
+                this.aliveObjectList[source] = {};
+            }
+
             for (var i = 0, max = packets.length; i < max; i++) {
                 var packet = packets[i];
                 switch (packet.address) {
                     // only these profiles are currently possible
                     case '/tuio/2Dobj':
                     case '/tuio/2Dcur':
-                        this.acceptMessage(packet);
+                        this.acceptMessage(packet,source);
                         break;
                     // blobs not yet implemented.
                     case '/tuio/2Dblb':
@@ -784,53 +798,62 @@ module.exports = (function(root) { 'use strict';
 
         },
 
-        acceptMessage: function(oscMessage) {
+        getSource: function(packets) {
+            for (var i = packets.length - 1; i >= 0; i--) {
+                if (packets[i].args[0].toLowerCase() == 'source') {
+                    return packets[i].args[1];
+                }
+            }
+            return '#noSourceTag#';
+        },
+
+        acceptMessage: function(oscMessage, source) {
             var address = oscMessage.address;
             var command = oscMessage.args[0];
             var args = oscMessage.args.slice(1, oscMessage.length);
             // distinguish between TUIO-Objects and TUIO-Cursors
             switch (address) {
                 case '/tuio/2Dobj':
-                    this.handleObjectMessage(command, args);
+                    this.handleObjectMessage(command, args, source);
                     break;
                 case '/tuio/2Dcur':
-                    this.handleCursorMessage(command, args);
+                    this.handleCursorMessage(command, args, source);
                     break;
             }
         },
 
-        handleObjectMessage: function(command, args) {
+        handleObjectMessage: function(command, args, source) {
             // distinguish between the message types
-            switch (command) {
+            switch (command.toLowerCase()) {
                 case 'set':
-                    this.objectSet(args);
+                    this.objectSet(args, source);
                     break;
                 case 'alive':
-                    this.objectAlive(args);
+                    this.objectAlive(args, source);
                     break;
                 case 'fseq':
-                    this.objectFseq(args);
+                    this.objectFseq(args, source);
                     break;
             }
         },
 
-        handleCursorMessage: function(command, args) {
+        handleCursorMessage: function(command, args, source) {
             // distinguish between the message types
             switch (command) {
                 case 'set':
-                    this.cursorSet(args);
+                    this.cursorSet(args, source);
                     break;
                 case 'alive':
-                    this.cursorAlive(args);
+                    this.cursorAlive(args, source);
                     break;
                 case 'fseq':
-                    this.cursorFseq(args);
+                    this.cursorFseq(args, source);
                     break;
             }
         },
 
         // updates the values of a TUIO-Object
-        objectSet: function(args) {
+        objectSet: function(args, source) {
             var sid = args[0];
             var cid = args[1];
             var xPos = args[2];
@@ -842,17 +865,18 @@ module.exports = (function(root) { 'use strict';
             var mAccel = args[8];
             var rAccel = args[9];
 
-            if (!_.has(this.objectList, sid)) {
+            if (!_.has(this.objectList[source], sid)) {
                 var addObject = new Tuio.Object({
                     si: sid,
                     sym: cid,
                     xp: xPos,
                     yp: yPos,
-                    a: angle
+                    a: angle,
+                    source: source
                 });
                 this.frameObjects.push(addObject);
             } else {
-                var tobj = this.objectList[sid];
+                var tobj = this.objectList[source][sid];
                 if (!tobj) {
                     return;
                 }
@@ -871,7 +895,8 @@ module.exports = (function(root) { 'use strict';
                         sym: cid,
                         xp: xPos,
                         yp: yPos,
-                        a: angle
+                        a: angle,
+                        source: source
                     });
                     updateObject.update({
                         xp: xPos,
@@ -889,16 +914,16 @@ module.exports = (function(root) { 'use strict';
         },
 
         // check which TUIO-Objects are alive and update the list of living objects
-        objectAlive: function(args) {
+        objectAlive: function(args, source) {
             var removeObject = null;
             this.newObjectList = args;
-            this.aliveObjectList = _.difference(
-                    this.aliveObjectList,
+            this.aliveObjectList[source] = _.difference(
+                    this.aliveObjectList[source],
                     this.newObjectList
                 );
 
-            for (var i = 0, max = this.aliveObjectList.length; i < max; i++) {
-                removeObject = this.objectList[this.aliveObjectList[i]];
+            for (var i = 0, max = this.aliveObjectList[source].length; i < max; i++) {
+                removeObject = this.objectList[source][this.aliveObjectList[source][i]];
                 if (removeObject) {
                     removeObject.remove(this.currentTime);
                     this.frameObjects.push(removeObject);
@@ -906,19 +931,20 @@ module.exports = (function(root) { 'use strict';
             }
         },
 
-        // check if the bundle was too late. If not, trigger events to eventlistener (e.g. the ExtensionObject in this case)
-        objectFseq: function(args) {
+        // check if the bundle was too late. If not, trigger events
+        // to eventlistener (e.g. the ExtensionObject in this case)
+        objectFseq: function(args, source) {
             var fseq = args[0];
             var lateFrame = false;
             var tobj = null;
-
+            //var frame = this.currentFrame[source];
             if (fseq > 0) {
-                if (fseq > this.currentFrame) {
+                if (fseq > this.currentFrame[source]) {
                     this.currentTime = Tuio.Time.getSessionTime();
                 }
-                if ((fseq >= this.currentFrame) ||
-                        ((this.currentFrame - fseq) > 100)) {
-                    this.currentFrame = fseq;
+                if ((fseq >= this.currentFrame[source]) ||
+                        ((this.currentFrame[source] - fseq) > 100)) {
+                    this.currentFrame[source] = fseq;
                 } else {
                     lateFrame = true;
                 }
@@ -936,7 +962,7 @@ module.exports = (function(root) { 'use strict';
                             this.objectRemoved(tobj);
                             break;
                         case Tuio.Object.TUIO_ADDED:
-                            this.objectAdded(tobj);
+                            this.objectAdded(tobj, source);
                             break;
                         default:
                             this.objectDefault(tobj);
@@ -946,8 +972,8 @@ module.exports = (function(root) { 'use strict';
 
                 this.trigger('refresh', Tuio.Time.fromTime(this.currentTime));
 
-                var buffer = this.aliveObjectList;
-                this.aliveObjectList = this.newObjectList;
+                var buffer = this.aliveObjectList[source];
+                this.aliveObjectList[source] = this.newObjectList;
                 this.newObjectList = buffer;
             }
 
@@ -958,25 +984,26 @@ module.exports = (function(root) { 'use strict';
             var removeObject = tobj;
             removeObject.remove(this.currentTime);
             this.trigger('removeTuioObject', removeObject);
-            delete this.objectList[removeObject.getSessionId()];
+            delete this.objectList[removeObject.source][removeObject.getSessionId()];
         },
         //trigger add events to eventlistener (e.g. the ExtensionObject in this case)
-        objectAdded: function(tobj) {
+        objectAdded: function(tobj, source) {
             var addObject = new Tuio.Object({
                 ttime: this.currentTime,
                 si: tobj.getSessionId(),
                 sym: tobj.getSymbolId(),
                 xp: tobj.getX(),
                 yp: tobj.getY(),
-                a: tobj.getAngle()
+                a: tobj.getAngle(),
+                source: source
             });
-            this.objectList[addObject.getSessionId()] = addObject;
+            this.objectList[source][addObject.getSessionId()] = addObject;
             this.trigger('addTuioObject', addObject);
         },
         //trigger update events to eventlistener (e.g. the ExtensionObject in this case)
         // but only if the TUIO-Object really changed its state
         objectDefault: function(tobj) {
-            var updateObject = this.objectList[tobj.getSessionId()];
+            var updateObject = this.objectList[tobj.source][tobj.getSessionId()];
             if ((tobj.getX() !== updateObject.getX() &&
                         tobj.getXSpeed() === 0) ||
                     (tobj.getY() !== updateObject.getY() &&
@@ -1004,7 +1031,7 @@ module.exports = (function(root) { 'use strict';
             this.trigger('updateTuioObject', updateObject);
         },
         // update the values of a cursor. check if add event occured
-        cursorSet: function(args) {
+        cursorSet: function(args, source) {
             var sid = args[0];
             var xPos = args[1];
             var yPos = args[2];
@@ -1012,16 +1039,17 @@ module.exports = (function(root) { 'use strict';
             var ySpeed = args[4];
             var mAccel = args[5];
             // check if add event occured
-            if (!_.has(this.cursorList, sid)) {
+            if (!_.has(this.cursorList[source], sid)) {
                 var addCursor = new Tuio.Cursor({
                     si: sid,
                     ci: -1,
                     xp: xPos,
-                    yp: yPos
+                    yp: yPos,
+                    source: source
                 });
                 this.frameCursors.push(addCursor);
             } else {
-                var tcur = this.cursorList[sid];
+                var tcur = this.cursorList[source][sid];
                 if (!tcur) {
                     return;
                 }
@@ -1036,7 +1064,8 @@ module.exports = (function(root) { 'use strict';
                         si: sid,
                         ci: tcur.getCursorId(),
                         xp: xPos,
-                        yp: yPos
+                        yp: yPos,
+                        source: source
                     });
                     updateCursor.update({
                         xp: xPos,
@@ -1050,35 +1079,36 @@ module.exports = (function(root) { 'use strict';
             }
         },
         // check which cursors are still alive.
-        cursorAlive: function(args) {
+        cursorAlive: function(args, source) {
             var removeCursor = null;
             this.newCursorList = args;
             // compute living cursors
-            this.aliveCursorList = _.difference(this.aliveCursorList,
+            this.aliveCursorList[source] = _.difference(this.aliveCursorList[source],
                     this.newCursorList);
 
-            for (var i = 0, max = this.aliveCursorList.length; i < max; i++) {
+            for (var i = 0, max = this.aliveCursorList[source].length; i < max; i++) {
                 // determine remove events
-                removeCursor = this.cursorList[this.aliveCursorList[i]];
+                removeCursor = this.cursorList[source][this.aliveCursorList[source][i]];
                 if (removeCursor) {
                     removeCursor.remove(this.currentTime);
                     this.frameCursors.push(removeCursor);
                 }
             }
         },
-        // check currency of bundle. If it was not too late, trigger event to eventlistener (e.g. ScratchExtension Objekt)
-        cursorFseq: function(args) {
+        // check currency of bundle. If it was not too late, trigger event
+        // to eventlistener (e.g. ScratchExtension Objekt)
+        cursorFseq: function(args, source) {
             var fseq = args[0];
             var lateFrame = false;
             var tcur = null;
             // check with the frequence id whether the package is current or not
             if (fseq > 0) {
-                if (fseq > this.currentFrame) {
+                if (fseq > this.currentFrame[source]) {
                     this.currentTime = Tuio.Time.getSessionTime();
                 }
-                if ((fseq >= this.currentFrame) ||
-                        ((this.currentFrame - fseq) > 100)) {
-                    this.currentFrame = fseq;
+                if ((fseq >= this.currentFrame[source]) ||
+                        ((this.currentFrame[source] - fseq) > 100)) {
+                    this.currentFrame[source] = fseq;
                 } else {
                     lateFrame = true;
                 }
@@ -1097,7 +1127,7 @@ module.exports = (function(root) { 'use strict';
                             this.cursorRemoved(tcur);
                             break;
                         case Tuio.Cursor.TUIO_ADDED:
-                            this.cursorAdded(tcur);
+                            this.cursorAdded(tcur, source);
                             break;
                         default:
                             this.cursorDefault(tcur);
@@ -1107,8 +1137,8 @@ module.exports = (function(root) { 'use strict';
 
                 this.trigger('refresh', Tuio.Time.fromTime(this.currentTime));
 
-                var buffer = this.aliveCursorList;
-                this.aliveCursorList = this.newCursorList;
+                var buffer = this.aliveCursorList[source];
+                this.aliveCursorList[source] = this.newCursorList;
                 this.newCursorList = buffer;
             }
 
@@ -1118,15 +1148,16 @@ module.exports = (function(root) { 'use strict';
         cursorRemoved: function(tcur) {
             var removeCursor = tcur;
             removeCursor.remove(this.currentTime);
+            var currentSource = tcur.source;
 
             this.trigger('removeTuioCursor', removeCursor);
 
-            delete this.cursorList[removeCursor.getSessionId()];
+            delete this.cursorList[currentSource][removeCursor.getSessionId()];
 
             if (removeCursor.getCursorId() === this.maxCursorId) {
                 this.maxCursorId = -1;
-                if (_.size(this.cursorList) > 0) {
-                    var maxCursor = _.max(this.cursorList, function(cur) {
+                if (_.size(this.cursorList[currentSource]) > 0) {
+                    var maxCursor = _.max(this.cursorList[currentSource], function(cur) {
                         return cur.getCursorId();
                     });
                     if (maxCursor.getCursorId() > this.maxCursorId) {
@@ -1146,8 +1177,8 @@ module.exports = (function(root) { 'use strict';
             }
         },
         // trigger add event for cursor to eventlistener (e.g. ScratchExtension Objekt)
-        cursorAdded: function(tcur) {
-            var cid = _.size(this.cursorList);
+        cursorAdded: function(tcur, _source) {
+            var cid = _.size(this.cursorList[_source]);
             var testCursor = null;
 
             if ((cid <= this.maxCursorId) && (this.freeCursorList.length > 0)) {
@@ -1174,15 +1205,17 @@ module.exports = (function(root) { 'use strict';
                 si: tcur.getSessionId(),
                 ci: cid,
                 xp: tcur.getX(),
-                yp: tcur.getY()
+                yp: tcur.getY(),
+                source: _source
             });
-            this.cursorList[addCursor.getSessionId()] = addCursor;
+            this.cursorList[_source][addCursor.getSessionId()] = addCursor;
 
             this.trigger('addTuioCursor', addCursor);
         },
         // trigger update event for cursor to eventlistener (e.g. ScratchExtension Objekt)
         cursorDefault: function(tcur) {
-            var updateCursor = this.cursorList[tcur.getSessionId()];
+            var updateCursor =
+                this.cursorList[tcur.source][tcur.getSessionId()];
             // check if there were status changes
             if ((tcur.getX() !== updateCursor.getX() &&
                         tcur.getXSpeed() === 0) ||

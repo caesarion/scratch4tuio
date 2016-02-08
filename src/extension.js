@@ -25,6 +25,9 @@ module.exports = (function() { 'use strict';
     // references the latest tuio-object. Needed for the 'latest Tuio Object' block.
     var latestTuioObject = null;
 
+    // references the latest tuio-object of a given source.
+    var latestTuioObjectFromSource = {};
+
     // the microseconds until an event expires (e.g. is not used any more)
     var expiringMicroseconds = 50000;
 
@@ -36,17 +39,30 @@ module.exports = (function() { 'use strict';
     // set the behavior of what should happen when a certain event occurs: -------------------------------------
 
     var onAddTuioCursor = function(addCursor) {
+        var cursorIDWithSourceTag =
+            encodeIDwithSource(cursorID, addCursor.source);
+
+        // set without source tag
         add[cursorID] = true;
         remove[cursorID] = null;
         tuioObjects[cursorID] = addCursor;
+
+        // set with source tag
+        add[cursorIDWithSourceTag] = true;
+        remove[cursorIDWithSourceTag] = null;
+        tuioObjects[cursorIDWithSourceTag] = addCursor;
     };
 
     var onUpdateTuioCursor = function(updateCursor) {
         tuioObjects[cursorID] = updateCursor;
+        tuioObjects[encodeIDwithSource(cursorID, updateCursor.source)] =
+            updateCursor;
     };
 
     var onRemoveTuioCursor = function(removeCursor) {
         remove[cursorID] = removeCursor;
+        remove[encodeIDwithSource(cursorID, removeCursor.source)] =
+            removeCursor;
     };
 
     var onAddTuioObject = function(addObject) {
@@ -56,6 +72,18 @@ module.exports = (function() { 'use strict';
         remove[symID] = null;
         tuioObjects[symID] = addObject;
         latestTuioObject = addObject;
+        latestTuioObjectFromSource[addObject.source] = addObject;
+
+        var symIDwithSourceTag = encodeIDwithSource(symID, addObject.source);
+
+        add[symIDwithSourceTag] = true;
+        remove[symIDwithSourceTag] = null;
+        tuioObjects[symIDwithSourceTag] = addObject;
+        // do not use 'sess' here because the add block is not used combined
+        // with a session id, since the session id
+        // is first generated when object first spotted. Thus, the user
+        // does not need to use the session id in the add block
+
     };
 
     var onUpdateTuioObject = function(updateObject) {
@@ -65,6 +93,15 @@ module.exports = (function() { 'use strict';
         tuioObjects[symID] = updateObject;
         tuioObjects[sessID] = updateObject;
         latestTuioObject = updateObject;
+
+        var symIDwithSourceTag =
+            encodeIDwithSource(updateObject.source, symID);
+        var sessIDwithSourceTag =
+            encodeIDwithSource(updateObject.source ,sessID);
+
+        tuioObjects[symIDwithSourceTag] = updateObject;
+        tuioObjects[sessIDwithSourceTag] = updateObject;
+        latestTuioObjectFromSource[updateObject.source] = updateObject;
     };
 
     var onRemoveTuioObject = function(removeObject) {
@@ -75,6 +112,16 @@ module.exports = (function() { 'use strict';
         add[symID] = null;
         tuioObjects[symID] = null;
         tuioObjects[sessID] = null;
+
+        var symIDwithSourceTag =
+            encodeIDwithSource(removeObject.source, symID);
+        var sessIDwithSourceTag =
+            encodeIDwithSource(removeObject.source ,sessID);
+
+        remove[symIDwithSourceTag] = removeObject;
+        add[symIDwithSourceTag] = null;
+        tuioObjects[symIDwithSourceTag] = null;
+        tuioObjects[sessIDwithSourceTag] = null;
     };
 
     var onRefresh = function(/*time*/) {
@@ -93,9 +140,10 @@ module.exports = (function() { 'use strict';
     // if there is no connection possible, the event based socket.io client assures to reconnect as soon as
     // the server is available
     client.connect();
-    // end client initialisation ---------------------------------------------------------------------------------------
+    // end client initialisation -----------------------------------------------------------------------------------
 
     // define helper functions that work on the input of the blocks ----------------------------------------
+
     var encodeID = function(id, type) {
         switch (type) {
             case 'sess':
@@ -109,6 +157,10 @@ module.exports = (function() { 'use strict';
         }
     };
 
+    var encodeIDwithSource = function(id, source) {
+        return source + id;
+    };
+
     // var decodeID = function(id) {
     //     if (id.substr(0, sessionIdPrefix.length) === sessionIdPrefix) {
     //         return id.substr(sessionIdPrefix.length);
@@ -119,8 +171,9 @@ module.exports = (function() { 'use strict';
     //     }
     // };
 
-    var reID = new RegExp('(' + cursorID + '|' + latestObjectID + '|' +
-            sessionIdPrefix + '\\d+|' + symbolIdPrefix + '\\d+)');
+    var reID = new RegExp('\\c+ ' + '(' + cursorID + '|' + latestObjectID +
+        '|' + sessionIdPrefix + '\\d+|' + symbolIdPrefix + '\\d+' + ')');
+
     var checkID = function(id) {
         return reID.test(id);
     };
@@ -139,13 +192,15 @@ module.exports = (function() { 'use strict';
     // };
 
     // coordinate conversion from tuio to scratch coordinates.
-    // @param: xCoordinate -> the x-coordinate value. It is a number between 0 and 1 (e.g. a procentage rate). 0 means total left, 1 means total right.
+    // @param: xCoordinate -> the x-coordinate value. It is a number
+    // between 0 and 1 (e.g. a procentage rate). 0 means total left, 1 means total right.
     // @result: the x value in scratch coordinates. A value between -240 (total left) and + 240 (total right)
     var convertXToScratchCoordinate = function(xCoordinate) {
         return Math.round(-240.0 + 480.0 * xCoordinate);
     };
     // coordinate conversion from tuio to scratch coordinates.
-    // @param: yCoordinate --> the y-coordinate value. It is a number between 0 and 1 (e.g. a procentage rate). 0 means top, 1 means bottom
+    // @param: yCoordinate --> the y-coordinate value. It is a number between 0 and 1
+    // (e.g. a procentage rate). 0 means top, 1 means bottom
     // @result: the y value in scratch coordinates. A value between +180 (top) and -180 (bottom)
     var convertYToScratchCoordinate = function(yCoordinate) {
         return Math.round(180.0 - 360.0 * yCoordinate);
@@ -153,10 +208,12 @@ module.exports = (function() { 'use strict';
 
     // Expose extension interface to module.exports
     return {
-        // begin definition of block behavior ------------------------------------------------------------------------------
+        // begin definition of block behavior ---------------------------------------------------------------------
 
-        // this method defines the behavior of the update-event-hat-block. It is continuously executed by the scratch-flash-app, for every instantiated update-hat-block.
-        // The update-event-block executes is command stack, if and only if the tuio object with the given symbolID is updated within the last 50 ms.
+        // this method defines the behavior of the update-event-hat-block. It is continuously
+        // executed by the scratch-flash-app, for every instantiated update-hat-block.
+        // The update-event-block executes is command stack, if and only if the tuio object
+        // with the given symbolID is updated within the last 50 ms.
         // @param: id --> the symbolID of the object that should be checked for updates.
         updateEventHatBlock: function(id) {
             if (trueUpdateCount[id] > 1) {
@@ -186,7 +243,8 @@ module.exports = (function() { 'use strict';
 
         },
 
-        // this method defines the behavior of the add-event-hat-block. It is continuously executed by the scratch-flash-app, for every instantiated add-hat-block.
+        // this method defines the behavior of the add-event-hat-block. It is continuously executed
+        // by the scratch-flash-app, for every instantiated add-hat-block.
         // @param: id --> the symbolID of the object that should be checked for addings.
         addEventHatBlock: function(id) {
             if (checkID(id) === true) {
@@ -201,7 +259,8 @@ module.exports = (function() { 'use strict';
             }
         },
 
-        // this method defines the behavior of the remove-event-hat-block. It is continuously executed by the scratch-flash-app, for every instantiated remove-hat-block.
+        // this method defines the behavior of the remove-event-hat-block. It is continuously
+        // executed by the scratch-flash-app, for every instantiated remove-hat-block.
         // @param: id --> the symbolID of the object that should be checked for removals.
         removeEventHatBlock: function(id) {
             var current = remove[id];
@@ -219,8 +278,8 @@ module.exports = (function() { 'use strict';
             return encodeID(id, 'sym');
         },
 
-        // this method defines the behavior of the tuioObject SessionID block. It encodes the the typed in integer value by returning
-        // -id. This way, the blocks can distinguish between sessionID and SymboldID
+        // this method defines the behavior of the tuioObject SessionID block. It encodes the the typed
+        // in integer value by returning -id. This way, the blocks can distinguish between sessionID and SymboldID
         // @param: id --> the typed in integer value in the block
         tuioObjectSessionID: function(id) {
             return encodeID(id, 'sess');
@@ -231,9 +290,21 @@ module.exports = (function() { 'use strict';
             return cursorID;
         },
 
-        // this method defines the behavior of the 'latest tuio object' block. It returns the symbolID of the latest changed object.
+        // this method defines the behavior of the 'latest tuio object' block. It returns the
+        // symbolID of the latest changed object.
         getLatestTuioObject: function() {
             return latestObjectID;
+        },
+
+        // this method defines the behavior of the 'latest tuio object from source' block.
+        // It delegates the given source parameter
+        // @param: source --> the typed in source in the block
+        getLatestTuioObjectFromSource: function(source) {
+            return source;
+        },
+
+        tuioSource: function(id, source) {
+            return encodeIDwithSource(id, source);
         },
 
         // the method defines the behavior of the tuio-attribute-block. Returns the value of the
@@ -247,7 +318,10 @@ module.exports = (function() { 'use strict';
             if (id == latestObjectID) {
                 current = latestTuioObject;
             } else {
-                current = tuioObjects[id];
+                current = latestTuioObjectFromSource[id];
+                if (typeof current == 'undefined' || current == null) {
+                    current = tuioObjects[id];
+                }
             }
 
             var menus = this.descriptor.menus;
@@ -290,6 +364,9 @@ module.exports = (function() { 'use strict';
                         } else {
                             return id;
                         }
+                        break;
+                    case menus.objectAttributes[12]:
+                        return current.source;
                 }
             } else {
                 return 'ERROR: No object with id ' + id + ' recognized!';
@@ -307,8 +384,12 @@ module.exports = (function() { 'use strict';
             if (id == latestObjectID) {
                 current = latestTuioObject;
             } else {
-                current = tuioObjects[id];
+                current = latestTuioObjectFromSource[id];
+                if (typeof current == 'undefined' || current == null) {
+                    current = tuioObjects[id];
+                }
             }
+
             if (typeof current != 'undefined' && current != null) {
                 var menus = this.descriptor.menus;
                 var currentStatus = current.getTuioState();
@@ -361,6 +442,35 @@ module.exports = (function() { 'use strict';
             return value;
         },
 
+        // this method defines the behavior of the 'updateOnAnyFromSource' hat block. The hat block executes its command stack, if and only if
+        // there was an update on any tuio object of the given source within the last 50 ms
+        updateOnAnyObjectFromSource: function(source) {
+            var id = latestObjectID + source;
+            if (trueUpdateCount[id] > 1) {
+                trueUpdateCount[id] = 0;
+                return false;
+            }
+            var current = latestTuioObjectFromSource[source];
+            if (typeof current == 'undefined' || current == null) {
+                return false;
+            }
+            // compare the times of the received Update with the current time
+            var sessionTime = Tuio.Time.getSessionTime();
+            var currentTime = current.getTuioTime();
+            var timeDiff = sessionTime.subtractTime(currentTime);
+            var value = (timeDiff.getSeconds() === 0 &&
+                    timeDiff.getMicroseconds() <= expiringMicroseconds);
+            if (value) {
+                // this mechanism is necessary due to the fact that hat blocks only fire when an up flank is received.
+                // This mechanism creates this flank
+                if (trueUpdateCount[id]) {
+                    trueUpdateCount[id]++;
+                } else {
+                    trueUpdateCount[id] = 1;
+                }
+            }
+            return value;
+        },
         // end block behavior definitions ----------------------------------------------------------------------------------
 
         // defined the shutdown behavior of the extension

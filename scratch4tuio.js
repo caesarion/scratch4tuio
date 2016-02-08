@@ -1,6 +1,6 @@
 /*!
  * Scratch4TUIO v0.9.1 (https://github.com/caesarion/Scratch4TuioExtension)
- * Copyright 2015-2015 Sebastian Thiele <s.thiele87@yahoo.de>
+ * Copyright 2015-2016 Sebastian Thiele <s.thiele87@yahoo.de>
  * Licensed under the GPL-2.0 license
  */
 
@@ -16,7 +16,7 @@
 
 var base64 = require('base64-js')
 var ieee754 = require('ieee754')
-var isArray = require('is-array')
+var isArray = require('isarray')
 
 exports.Buffer = Buffer
 exports.SlowBuffer = SlowBuffer
@@ -1473,7 +1473,7 @@ function utf8ToBytes (string, units) {
       }
 
       // valid surrogate pair
-      codePoint = leadSurrogate - 0xD800 << 10 | codePoint - 0xDC00 | 0x10000
+      codePoint = (leadSurrogate - 0xD800 << 10 | codePoint - 0xDC00) + 0x10000
     } else if (leadSurrogate) {
       // valid bmp char, but last char was a lead
       if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD)
@@ -1552,7 +1552,7 @@ function blitBuffer (src, dst, offset, length) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"base64-js":2,"ieee754":3,"is-array":4}],2:[function(require,module,exports){
+},{"base64-js":2,"ieee754":3,"isarray":5}],2:[function(require,module,exports){
 var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
 ;(function (exports) {
@@ -1765,41 +1765,6 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
 }
 
 },{}],4:[function(require,module,exports){
-
-/**
- * isArray
- */
-
-var isArray = Array.isArray;
-
-/**
- * toString
- */
-
-var str = Object.prototype.toString;
-
-/**
- * Whether or not the given `val`
- * is an array.
- *
- * example:
- *
- *        isArray([]);
- *        // > true
- *        isArray(arguments);
- *        // > false
- *        isArray('');
- *        // > false
- *
- * @param {mixed} val
- * @return {bool}
- */
-
-module.exports = isArray || function (val) {
-  return !! val && '[object Array]' == str.call(val);
-};
-
-},{}],5:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -2101,6 +2066,11 @@ function isObject(arg) {
 function isUndefined(arg) {
   return arg === void 0;
 }
+
+},{}],5:[function(require,module,exports){
+module.exports = Array.isArray || function (arr) {
+  return Object.prototype.toString.call(arr) == '[object Array]';
+};
 
 },{}],6:[function(require,module,exports){
 (function (global){
@@ -4901,7 +4871,7 @@ function isUndefined(arg) {
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{}],7:[function(require,module,exports){
 (function (Buffer){
-/*! osc.js 2.0.0, Copyright 2015 Colin Clark | github.com/colinbdclark/osc.js */
+/*! osc.js 2.0.1, Copyright 2015 Colin Clark | github.com/colinbdclark/osc.js */
 
 /*
  * osc.js: An Open Sound Control library for JavaScript that works in both the browser and Node.js
@@ -5657,7 +5627,7 @@ var osc = osc || {};
     osc.readMessage = function (data, options, offsetState) {
         options = options || osc.defaults;
 
-        var dv = osc.dataView(data, data.byteOffset, data.length);
+        var dv = osc.dataView(data, data.byteOffset, data.byteLength);
         offsetState = offsetState || {
             idx: 0
         };
@@ -5800,7 +5770,7 @@ var osc = osc || {};
      * @return {Object} a bundle or message object
      */
     osc.readPacket = function (data, options, offsetState, len) {
-        var dv = osc.dataView(data, data.byteOffset, data.length);
+        var dv = osc.dataView(data, data.byteOffset, data.byteLength);
 
         len = len === undefined ? dv.byteLength : len;
         offsetState = offsetState || {
@@ -5919,7 +5889,7 @@ var osc = osc || {};
                 } else if (arg instanceof Uint8Array ||
                     arg instanceof ArrayBuffer) {
                     return "b";
-                } else if (arg.high instanceof Number && arg.low instanceof Number) {
+                } else if (typeof arg.high === "number" && typeof arg.low === "number") {
                     return "h";
                 }
                 break;
@@ -5983,7 +5953,16 @@ var osc = osc || {};
  * Released under the Apache License, Version 2.0
  * see: https://github.com/dcodeIO/Long.js for details
  */
-(function(global) {
+(function(global, factory) {
+
+    /* AMD */ if (typeof define === 'function' && define["amd"])
+        define([], factory);
+    /* CommonJS */ else if (typeof require === 'function' && typeof module === "object" && module && module["exports"])
+        module["exports"] = factory();
+    /* Global */ else
+        (global["dcodeIO"] = global["dcodeIO"] || {})["Long"] = factory();
+
+})(this, function() {
     "use strict";
 
     /**
@@ -5996,7 +5975,7 @@ var osc = osc || {};
      * @param {boolean=} unsigned Whether unsigned or not, defaults to `false` for signed
      * @constructor
      */
-    var Long = function(low, high, unsigned) {
+    function Long(low, high, unsigned) {
 
         /**
          * The low 32 bits as a signed value.
@@ -6018,7 +5997,7 @@ var osc = osc || {};
          * @expose
          */
         this.unsigned = !!unsigned;
-    };
+    }
 
     // The internal representation of a long is the two given signed, 32-bit values.
     // We use 32-bit pieces because these are the size of integers on which
@@ -6038,13 +6017,28 @@ var osc = osc || {};
     // methods on which they depend.
 
     /**
+     * An indicator used to reliably determine if an object is a Long or not.
+     * @type {boolean}
+     * @const
+     * @expose
+     * @private
+     */
+    Long.__isLong__;
+
+    Object.defineProperty(Long.prototype, "__isLong__", {
+        value: true,
+        enumerable: false,
+        configurable: false
+    });
+
+    /**
      * Tests if the specified object is a Long.
      * @param {*} obj Object
      * @returns {boolean}
      * @expose
      */
-    Long.isLong = function(obj) {
-        return (obj && obj instanceof Long) === true;
+    Long.isLong = function isLong(obj) {
+        return (obj && obj["__isLong__"]) === true;
     };
 
     /**
@@ -6068,7 +6062,7 @@ var osc = osc || {};
      * @returns {!Long} The corresponding Long value
      * @expose
      */
-    Long.fromInt = function(value, unsigned) {
+    Long.fromInt = function fromInt(value, unsigned) {
         var obj, cachedObj;
         if (!unsigned) {
             value = value | 0;
@@ -6102,7 +6096,7 @@ var osc = osc || {};
      * @returns {!Long} The corresponding Long value
      * @expose
      */
-    Long.fromNumber = function(value, unsigned) {
+    Long.fromNumber = function fromNumber(value, unsigned) {
         unsigned = !!unsigned;
         if (isNaN(value) || !isFinite(value))
             return Long.ZERO;
@@ -6126,7 +6120,7 @@ var osc = osc || {};
      * @returns {!Long} The corresponding Long value
      * @expose
      */
-    Long.fromBits = function(lowBits, highBits, unsigned) {
+    Long.fromBits = function fromBits(lowBits, highBits, unsigned) {
         return new Long(lowBits, highBits, unsigned);
     };
 
@@ -6138,7 +6132,7 @@ var osc = osc || {};
      * @returns {!Long} The corresponding Long value
      * @expose
      */
-    Long.fromString = function(str, unsigned, radix) {
+    Long.fromString = function fromString(str, unsigned, radix) {
         if (str.length === 0)
             throw Error('number format error: empty string');
         if (str === "NaN" || str === "Infinity" || str === "+Infinity" || str === "-Infinity")
@@ -6182,14 +6176,14 @@ var osc = osc || {};
      * @returns {!Long}
      * @expose
      */
-    Long.fromValue = function(val) {
+    Long.fromValue = function fromValue(val) {
+        if (val /* is compatible */ instanceof Long)
+            return val;
         if (typeof val === 'number')
             return Long.fromNumber(val);
         if (typeof val === 'string')
             return Long.fromString(val);
-        if (Long.isLong(val))
-            return val;
-        // Throws for not an object (undefined, null):
+        // Throws for non-objects, converts non-instanceof Long:
         return new Long(val.low, val.high, val.unsigned);
     };
 
@@ -6299,7 +6293,7 @@ var osc = osc || {};
      * @returns {number}
      * @expose
      */
-    Long.prototype.toInt = function() {
+    Long.prototype.toInt = function toInt() {
         return this.unsigned ? this.low >>> 0 : this.low;
     };
 
@@ -6308,7 +6302,7 @@ var osc = osc || {};
      * @returns {number}
      * @expose
      */
-    Long.prototype.toNumber = function() {
+    Long.prototype.toNumber = function toNumber() {
         if (this.unsigned) {
             return ((this.high >>> 0) * TWO_PWR_32_DBL) + (this.low >>> 0);
         }
@@ -6323,7 +6317,7 @@ var osc = osc || {};
      * @throws {RangeError} If `radix` is out of range
      * @expose
      */
-    Long.prototype.toString = function(radix) {
+    Long.prototype.toString = function toString(radix) {
         radix = radix || 10;
         if (radix < 2 || 36 < radix)
             throw RangeError('radix out of range: ' + radix);
@@ -6335,7 +6329,7 @@ var osc = osc || {};
                 // We need to change the Long value before it can be negated, so we remove
                 // the bottom-most digit in this base and then recurse to do the rest.
                 var radixLong = Long.fromNumber(radix);
-                var div = this.div(radixLong);
+                var div = this.divide(radixLong);
                 rem = div.multiply(radixLong).subtract(this);
                 return div.toString(radix) + rem.toInt().toString(radix);
             } else
@@ -6348,7 +6342,7 @@ var osc = osc || {};
         rem = this;
         var result = '';
         while (true) {
-            var remDiv = rem.div(radixToPower),
+            var remDiv = rem.divide(radixToPower),
                 intval = rem.subtract(remDiv.multiply(radixToPower)).toInt() >>> 0,
                 digits = intval.toString(radix);
             rem = remDiv;
@@ -6367,7 +6361,7 @@ var osc = osc || {};
      * @returns {number} Signed high bits
      * @expose
      */
-    Long.prototype.getHighBits = function() {
+    Long.prototype.getHighBits = function getHighBits() {
         return this.high;
     };
 
@@ -6376,7 +6370,7 @@ var osc = osc || {};
      * @returns {number} Unsigned high bits
      * @expose
      */
-    Long.prototype.getHighBitsUnsigned = function() {
+    Long.prototype.getHighBitsUnsigned = function getHighBitsUnsigned() {
         return this.high >>> 0;
     };
 
@@ -6385,7 +6379,7 @@ var osc = osc || {};
      * @returns {number} Signed low bits
      * @expose
      */
-    Long.prototype.getLowBits = function() {
+    Long.prototype.getLowBits = function getLowBits() {
         return this.low;
     };
 
@@ -6394,7 +6388,7 @@ var osc = osc || {};
      * @returns {number} Unsigned low bits
      * @expose
      */
-    Long.prototype.getLowBitsUnsigned = function() {
+    Long.prototype.getLowBitsUnsigned = function getLowBitsUnsigned() {
         return this.low >>> 0;
     };
 
@@ -6403,7 +6397,7 @@ var osc = osc || {};
      * @returns {number}
      * @expose
      */
-    Long.prototype.getNumBitsAbs = function() {
+    Long.prototype.getNumBitsAbs = function getNumBitsAbs() {
         if (this.isNegative()) // Unsigned Longs are never negative
             return this.equals(Long.MIN_VALUE) ? 64 : this.negate().getNumBitsAbs();
         var val = this.high != 0 ? this.high : this.low;
@@ -6418,7 +6412,7 @@ var osc = osc || {};
      * @returns {boolean}
      * @expose
      */
-    Long.prototype.isZero = function() {
+    Long.prototype.isZero = function isZero() {
         return this.high === 0 && this.low === 0;
     };
 
@@ -6427,7 +6421,7 @@ var osc = osc || {};
      * @returns {boolean}
      * @expose
      */
-    Long.prototype.isNegative = function() {
+    Long.prototype.isNegative = function isNegative() {
         return !this.unsigned && this.high < 0;
     };
 
@@ -6436,7 +6430,7 @@ var osc = osc || {};
      * @returns {boolean}
      * @expose
      */
-    Long.prototype.isPositive = function() {
+    Long.prototype.isPositive = function isPositive() {
         return this.unsigned || this.high >= 0;
     };
 
@@ -6445,7 +6439,7 @@ var osc = osc || {};
      * @returns {boolean}
      * @expose
      */
-    Long.prototype.isOdd = function() {
+    Long.prototype.isOdd = function isOdd() {
         return (this.low & 1) === 1;
     };
 
@@ -6454,7 +6448,7 @@ var osc = osc || {};
      * @returns {boolean}
      * @expose
      */
-    Long.prototype.isEven = function() {
+    Long.prototype.isEven = function isEven() {
         return (this.low & 1) === 0;
     };
 
@@ -6464,7 +6458,7 @@ var osc = osc || {};
      * @returns {boolean}
      * @expose
      */
-    Long.prototype.equals = function(other) {
+    Long.prototype.equals = function equals(other) {
         if (!Long.isLong(other))
             other = Long.fromValue(other);
         if (this.unsigned !== other.unsigned && (this.high >>> 31) === 1 && (other.high >>> 31) === 1)
@@ -6473,16 +6467,32 @@ var osc = osc || {};
     };
 
     /**
+     * Tests if this Long's value equals the specified's. This is an alias of {@link Long#equals}.
+     * @function
+     * @param {!Long|number|string} other Other value
+     * @returns {boolean}
+     * @expose
+     */
+    Long.eq = Long.prototype.equals;
+
+    /**
      * Tests if this Long's value differs from the specified's.
      * @param {!Long|number|string} other Other value
      * @returns {boolean}
      * @expose
      */
-    Long.prototype.notEquals = function(other) {
-        if (!Long.isLong(other))
-            other = Long.fromValue(other);
-        return !this.equals(other);
+    Long.prototype.notEquals = function notEquals(other) {
+        return !this.equals(/* validates */ other);
     };
+
+    /**
+     * Tests if this Long's value differs from the specified's. This is an alias of {@link Long#notEquals}.
+     * @function
+     * @param {!Long|number|string} other Other value
+     * @returns {boolean}
+     * @expose
+     */
+    Long.neq = Long.prototype.notEquals;
 
     /**
      * Tests if this Long's value is less than the specified's.
@@ -6490,11 +6500,18 @@ var osc = osc || {};
      * @returns {boolean}
      * @expose
      */
-    Long.prototype.lessThan = function(other) {
-        if (!Long.isLong(other))
-            other = Long.fromValue(other);
-        return this.compare(other) < 0;
+    Long.prototype.lessThan = function lessThan(other) {
+        return this.compare(/* validates */ other) < 0;
     };
+
+    /**
+     * Tests if this Long's value is less than the specified's. This is an alias of {@link Long#lessThan}.
+     * @function
+     * @param {!Long|number|string} other Other value
+     * @returns {boolean}
+     * @expose
+     */
+    Long.prototype.lt = Long.prototype.lessThan;
 
     /**
      * Tests if this Long's value is less than or equal the specified's.
@@ -6502,11 +6519,18 @@ var osc = osc || {};
      * @returns {boolean}
      * @expose
      */
-    Long.prototype.lessThanOrEqual = function(other) {
-        if (!Long.isLong(other))
-            other = Long.fromValue(other);
-        return this.compare(other) <= 0;
+    Long.prototype.lessThanOrEqual = function lessThanOrEqual(other) {
+        return this.compare(/* validates */ other) <= 0;
     };
+
+    /**
+     * Tests if this Long's value is less than or equal the specified's. This is an alias of {@link Long#lessThanOrEqual}.
+     * @function
+     * @param {!Long|number|string} other Other value
+     * @returns {boolean}
+     * @expose
+     */
+    Long.prototype.lte = Long.prototype.lessThanOrEqual;
 
     /**
      * Tests if this Long's value is greater than the specified's.
@@ -6514,11 +6538,18 @@ var osc = osc || {};
      * @returns {boolean}
      * @expose
      */
-    Long.prototype.greaterThan = function(other) {
-        if (!Long.isLong(other))
-            other = Long.fromValue(other);
-        return this.compare(other) > 0;
+    Long.prototype.greaterThan = function greaterThan(other) {
+        return this.compare(/* validates */ other) > 0;
     };
+
+    /**
+     * Tests if this Long's value is greater than the specified's. This is an alias of {@link Long#greaterThan}.
+     * @function
+     * @param {!Long|number|string} other Other value
+     * @returns {boolean}
+     * @expose
+     */
+    Long.prototype.gt = Long.prototype.greaterThan;
 
     /**
      * Tests if this Long's value is greater than or equal the specified's.
@@ -6526,11 +6557,18 @@ var osc = osc || {};
      * @returns {boolean}
      * @expose
      */
-    Long.prototype.greaterThanOrEqual = function(other) {
-        if (!Long.isLong(other))
-            other = Long.fromValue(other);
-        return this.compare(other) >= 0;
+    Long.prototype.greaterThanOrEqual = function greaterThanOrEqual(other) {
+        return this.compare(/* validates */ other) >= 0;
     };
+
+    /**
+     * Tests if this Long's value is greater than or equal the specified's. This is an alias of {@link Long#greaterThanOrEqual}.
+     * @function
+     * @param {!Long|number|string} other Other value
+     * @returns {boolean}
+     * @expose
+     */
+    Long.prototype.gte = Long.prototype.greaterThanOrEqual;
 
     /**
      * Compares this Long's value with the specified's.
@@ -6539,7 +6577,9 @@ var osc = osc || {};
      *  if the given one is greater
      * @expose
      */
-    Long.prototype.compare = function(other) {
+    Long.prototype.compare = function compare(other) {
+        if (!Long.isLong(other))
+            other = Long.fromValue(other);
         if (this.equals(other))
             return 0;
         var thisNeg = this.isNegative(),
@@ -6560,11 +6600,19 @@ var osc = osc || {};
      * @returns {!Long} Negated Long
      * @expose
      */
-    Long.prototype.negate = function() {
+    Long.prototype.negate = function negate() {
         if (!this.unsigned && this.equals(Long.MIN_VALUE))
             return Long.MIN_VALUE;
         return this.not().add(Long.ONE);
     };
+
+    /**
+     * Negates this Long's value. This is an alias of {@link Long#negate}.
+     * @function
+     * @returns {!Long} Negated Long
+     * @expose
+     */
+    Long.prototype.neg = Long.prototype.negate;
 
     /**
      * Returns the sum of this and the specified Long.
@@ -6572,7 +6620,7 @@ var osc = osc || {};
      * @returns {!Long} Sum
      * @expose
      */
-    Long.prototype.add = function(addend) {
+    Long.prototype.add = function add(addend) {
         if (!Long.isLong(addend))
             addend = Long.fromValue(addend);
 
@@ -6609,11 +6657,20 @@ var osc = osc || {};
      * @returns {!Long} Difference
      * @expose
      */
-    Long.prototype.subtract = function(subtrahend) {
+    Long.prototype.subtract = function subtract(subtrahend) {
         if (!Long.isLong(subtrahend))
             subtrahend = Long.fromValue(subtrahend);
         return this.add(subtrahend.negate());
     };
+
+    /**
+     * Returns the difference of this and the specified Long. This is an alias of {@link Long#subtract}.
+     * @function
+     * @param {!Long|number|string} subtrahend Subtrahend
+     * @returns {!Long} Difference
+     * @expose
+     */
+    Long.prototype.sub = Long.prototype.subtract;
 
     /**
      * Returns the product of this and the specified Long.
@@ -6621,7 +6678,7 @@ var osc = osc || {};
      * @returns {!Long} Product
      * @expose
      */
-    Long.prototype.multiply = function(multiplier) {
+    Long.prototype.multiply = function multiply(multiplier) {
         if (this.isZero())
             return Long.ZERO;
         if (!Long.isLong(multiplier))
@@ -6683,12 +6740,21 @@ var osc = osc || {};
     };
 
     /**
+     * Returns the product of this and the specified Long. This is an alias of {@link Long#multiply}.
+     * @function
+     * @param {!Long|number|string} multiplier Multiplier
+     * @returns {!Long} Product
+     * @expose
+     */
+    Long.prototype.mul = Long.prototype.multiply;
+
+    /**
      * Returns this Long divided by the specified.
      * @param {!Long|number|string} divisor Divisor
      * @returns {!Long} Quotient
      * @expose
      */
-    Long.prototype.div = function(divisor) {
+    Long.prototype.divide = function divide(divisor) {
         if (!Long.isLong(divisor))
             divisor = Long.fromValue(divisor);
         if (divisor.isZero())
@@ -6704,12 +6770,12 @@ var osc = osc || {};
             else {
                 // At this point, we have |other| >= 2, so |this/other| < |MIN_VALUE|.
                 var halfThis = this.shiftRight(1);
-                approx = halfThis.div(divisor).shiftLeft(1);
+                approx = halfThis.divide(divisor).shiftLeft(1);
                 if (approx.equals(Long.ZERO)) {
                     return divisor.isNegative() ? Long.ONE : Long.NEG_ONE;
                 } else {
                     rem = this.subtract(divisor.multiply(approx));
-                    res = approx.add(rem.div(divisor));
+                    res = approx.add(rem.divide(divisor));
                     return res;
                 }
             }
@@ -6717,10 +6783,10 @@ var osc = osc || {};
             return this.unsigned ? Long.UZERO : Long.ZERO;
         if (this.isNegative()) {
             if (divisor.isNegative())
-                return this.negate().div(divisor.negate());
-            return this.negate().div(divisor).negate();
+                return this.negate().divide(divisor.negate());
+            return this.negate().divide(divisor).negate();
         } else if (divisor.isNegative())
-            return this.div(divisor.negate()).negate();
+            return this.divide(divisor.negate()).negate();
 
         // Repeat the following until the remainder is less than other:  find a
         // floating-point that approximates remainder / other *from below*, add this
@@ -6761,23 +6827,41 @@ var osc = osc || {};
     };
 
     /**
+     * Returns this Long divided by the specified. This is an alias of {@link Long#divide}.
+     * @function
+     * @param {!Long|number|string} divisor Divisor
+     * @returns {!Long} Quotient
+     * @expose
+     */
+    Long.prototype.div = Long.prototype.divide;
+
+    /**
      * Returns this Long modulo the specified.
      * @param {!Long|number|string} divisor Divisor
      * @returns {!Long} Remainder
      * @expose
      */
-    Long.prototype.modulo = function(divisor) {
+    Long.prototype.modulo = function modulo(divisor) {
         if (!Long.isLong(divisor))
             divisor = Long.fromValue(divisor);
-        return this.subtract(this.div(divisor).multiply(divisor));
+        return this.subtract(this.divide(divisor).multiply(divisor));
     };
+
+    /**
+     * Returns this Long modulo the specified. This is an alias of {@link Long#modulo}.
+     * @function
+     * @param {!Long|number|string} divisor Divisor
+     * @returns {!Long} Remainder
+     * @expose
+     */
+    Long.prototype.mod = Long.prototype.modulo;
 
     /**
      * Returns the bitwise NOT of this Long.
      * @returns {!Long}
      * @expose
      */
-    Long.prototype.not = function() {
+    Long.prototype.not = function not() {
         return Long.fromBits(~this.low, ~this.high, this.unsigned);
     };
 
@@ -6787,7 +6871,7 @@ var osc = osc || {};
      * @returns {!Long}
      * @expose
      */
-    Long.prototype.and = function(other) {
+    Long.prototype.and = function and(other) {
         if (!Long.isLong(other))
             other = Long.fromValue(other);
         return Long.fromBits(this.low & other.low, this.high & other.high, this.unsigned);
@@ -6799,7 +6883,7 @@ var osc = osc || {};
      * @returns {!Long}
      * @expose
      */
-    Long.prototype.or = function(other) {
+    Long.prototype.or = function or(other) {
         if (!Long.isLong(other))
             other = Long.fromValue(other);
         return Long.fromBits(this.low | other.low, this.high | other.high, this.unsigned);
@@ -6811,7 +6895,7 @@ var osc = osc || {};
      * @returns {!Long}
      * @expose
      */
-    Long.prototype.xor = function(other) {
+    Long.prototype.xor = function xor(other) {
         if (!Long.isLong(other))
             other = Long.fromValue(other);
         return Long.fromBits(this.low ^ other.low, this.high ^ other.high, this.unsigned);
@@ -6823,7 +6907,7 @@ var osc = osc || {};
      * @returns {!Long} Shifted Long
      * @expose
      */
-    Long.prototype.shiftLeft = function(numBits) {
+    Long.prototype.shiftLeft = function shiftLeft(numBits) {
         if (Long.isLong(numBits))
             numBits = numBits.toInt();
         if ((numBits &= 63) === 0)
@@ -6835,12 +6919,21 @@ var osc = osc || {};
     };
 
     /**
+     * Returns this Long with bits shifted to the left by the given amount. This is an alias of {@link Long#shiftLeft}.
+     * @function
+     * @param {number|!Long} numBits Number of bits
+     * @returns {!Long} Shifted Long
+     * @expose
+     */
+    Long.prototype.shl = Long.prototype.shiftLeft;
+
+    /**
      * Returns this Long with bits arithmetically shifted to the right by the given amount.
      * @param {number|!Long} numBits Number of bits
      * @returns {!Long} Shifted Long
      * @expose
      */
-    Long.prototype.shiftRight = function(numBits) {
+    Long.prototype.shiftRight = function shiftRight(numBits) {
         if (Long.isLong(numBits))
             numBits = numBits.toInt();
         if ((numBits &= 63) === 0)
@@ -6852,12 +6945,21 @@ var osc = osc || {};
     };
 
     /**
+     * Returns this Long with bits arithmetically shifted to the right by the given amount. This is an alias of {@link Long#shiftRight}.
+     * @function
+     * @param {number|!Long} numBits Number of bits
+     * @returns {!Long} Shifted Long
+     * @expose
+     */
+    Long.prototype.shr = Long.prototype.shiftRight;
+
+    /**
      * Returns this Long with bits logically shifted to the right by the given amount.
      * @param {number|!Long} numBits Number of bits
      * @returns {!Long} Shifted Long
      * @expose
      */
-    Long.prototype.shiftRightUnsigned = function(numBits) {
+    Long.prototype.shiftRightUnsigned = function shiftRightUnsigned(numBits) {
         if (Long.isLong(numBits))
             numBits = numBits.toInt();
         numBits &= 63;
@@ -6876,11 +6978,20 @@ var osc = osc || {};
     };
 
     /**
+     * Returns this Long with bits logically shifted to the right by the given amount. This is an alias of {@link Long#shiftRightUnsigned}.
+     * @function
+     * @param {number|!Long} numBits Number of bits
+     * @returns {!Long} Shifted Long
+     * @expose
+     */
+    Long.prototype.shru = Long.prototype.shiftRightUnsigned;
+
+    /**
      * Converts this Long to signed.
      * @returns {!Long} Signed long
      * @expose
      */
-    Long.prototype.toSigned = function() {
+    Long.prototype.toSigned = function toSigned() {
         if (!this.unsigned)
             return this;
         return new Long(this.low, this.high, false);
@@ -6891,20 +7002,14 @@ var osc = osc || {};
      * @returns {!Long} Unsigned long
      * @expose
      */
-    Long.prototype.toUnsigned = function() {
+    Long.prototype.toUnsigned = function toUnsigned() {
         if (this.unsigned)
             return this;
         return new Long(this.low, this.high, true);
     };
 
-    /* CommonJS */ if (typeof require === 'function' && typeof module === 'object' && module && typeof exports === 'object' && exports)
-        module["exports"] = Long;
-    /* AMD */ else if (typeof define === 'function' && define["amd"])
-        define(function() { return Long; });
-    /* Global */ else
-        (global["dcodeIO"] = global["dcodeIO"] || {})["Long"] = Long;
-
-})(this);
+    return Long;
+});
 ;/*
  * slip.js: A plain JavaScript SLIP implementation that works in both the browser and Node.js
  *
@@ -7464,20 +7569,22 @@ var osc = osc || {};
      * @return {Object} Current instance of EventEmitter for chaining.
      */
     proto.emitEvent = function emitEvent(evt, args) {
-        var listeners = this.getListenersAsObject(evt);
+        var listenersMap = this.getListenersAsObject(evt);
+        var listeners;
         var listener;
         var i;
         var key;
         var response;
 
-        for (key in listeners) {
-            if (listeners.hasOwnProperty(key)) {
-                i = listeners[key].length;
+        for (key in listenersMap) {
+            if (listenersMap.hasOwnProperty(key)) {
+                listeners = listenersMap[key].slice(0);
+                i = listeners.length;
 
                 while (i--) {
                     // If the listener returns true then it shall be removed from the event
                     // The function is executed either with a basic call or an apply if there is an args array
-                    listener = listeners[key][i];
+                    listener = listeners[i];
 
                     if (listener.once === true) {
                         this.removeListener(evt, listener.listener);
@@ -7864,9 +7971,9 @@ var osc = osc;
 }());
 
 }).call(this,require("buffer").Buffer)
-},{"./osc.js":8,"buffer":1,"events":5,"long":9,"slip":10}],8:[function(require,module,exports){
+},{"./osc.js":8,"buffer":1,"events":4,"long":9,"slip":10}],8:[function(require,module,exports){
 (function (Buffer){
-/*! osc.js 2.0.0, Copyright 2015 Colin Clark | github.com/colinbdclark/osc.js */
+/*! osc.js 2.0.1, Copyright 2015 Colin Clark | github.com/colinbdclark/osc.js */
 
 /*
  * osc.js: An Open Sound Control library for JavaScript that works in both the browser and Node.js
@@ -8622,7 +8729,7 @@ var osc = osc || {};
     osc.readMessage = function (data, options, offsetState) {
         options = options || osc.defaults;
 
-        var dv = osc.dataView(data, data.byteOffset, data.length);
+        var dv = osc.dataView(data, data.byteOffset, data.byteLength);
         offsetState = offsetState || {
             idx: 0
         };
@@ -8765,7 +8872,7 @@ var osc = osc || {};
      * @return {Object} a bundle or message object
      */
     osc.readPacket = function (data, options, offsetState, len) {
-        var dv = osc.dataView(data, data.byteOffset, data.length);
+        var dv = osc.dataView(data, data.byteOffset, data.byteLength);
 
         len = len === undefined ? dv.byteLength : len;
         offsetState = offsetState || {
@@ -8884,7 +8991,7 @@ var osc = osc || {};
                 } else if (arg instanceof Uint8Array ||
                     arg instanceof ArrayBuffer) {
                     return "b";
-                } else if (arg.high instanceof Number && arg.low instanceof Number) {
+                } else if (typeof arg.high === "number" && typeof arg.low === "number") {
                     return "h";
                 }
                 break;
@@ -15624,11 +15731,8 @@ function hasBinary(data) {
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"isarray":49}],49:[function(require,module,exports){
-module.exports = Array.isArray || function (arr) {
-  return Object.prototype.toString.call(arr) == '[object Array]';
-};
-
-},{}],50:[function(require,module,exports){
+arguments[4][5][0].apply(exports,arguments)
+},{"dup":5}],50:[function(require,module,exports){
 
 var indexOf = [].indexOf;
 
@@ -16316,8 +16420,8 @@ function isBuf(obj) {
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{}],56:[function(require,module,exports){
-arguments[4][49][0].apply(exports,arguments)
-},{"dup":49}],57:[function(require,module,exports){
+arguments[4][5][0].apply(exports,arguments)
+},{"dup":5}],57:[function(require,module,exports){
 /*! JSON v3.2.6 | http://bestiejs.github.io/json3 | Copyright 2012-2013, Kit Cambridge | http://kit.mit-license.org */
 ;(function (window) {
   // Convenience aliases.
@@ -17207,17 +17311,20 @@ module.exports={
                 ["h", "when %s added", "addEventHatBlock", ""],
                 ["h", "when %s removed", "removeEventHatBlock", ""],
                 ["h", "when any TUIO-Object changed", "updateOnAnyObject", ""],
+                ["h", "when any TUIO-Object from source %s changed", "updateOnAnyObjectFromSource", "", ""],
                 ["--"],
                 ["r", "last changed TUIO-Object", "getLatestTuioObject", ""],
+                ["r", "last changed TUIO-Object from source %s", "getLatestTuioObjectFromSource", "", ""],
                 ["r", "TUIO-Object with Symbol ID %n", "tuioObject", ""],
                 ["r", "TUIO-Object with Session ID %n", "tuioObjectSessionID", ""],
                 ["r", "TUIO-Cursor", "tuioCursor", ""],
                 ["r", "%m.objectAttributes of %s", "getTuioAttribute", "Position X", ""],
+                ["r", "%s from source %s?", "tuioSource", "", ""],
                 ["--"],
                 ["b", "%s is %m.objectStates ?", "getStateOfTuioObject", "", "moving"]
             ],
             "menus": {
-                "objectAttributes": ["Position X", "Position Y", "Angle", "Motion Speed", "Motion Accel", "Rotation Speed", "Rotation Accel", "xSpeed", "ySpeed", "symbolID", "sessionID", "scratchID"],
+                "objectAttributes": ["Position X", "Position Y", "Angle", "Motion Speed", "Motion Accel", "Rotation Speed", "Rotation Accel", "xSpeed", "ySpeed", "symbolID", "sessionID", "scratchID", "TUIO-source"],
                 "objectStates": ["moving", "accelerating", "decelerating", "rotating"]
             },
             "url": "http://caesarion.github.io/scratch4tuio/info/en.html"
@@ -17295,6 +17402,9 @@ module.exports = (function() { 'use strict';
     // references the latest tuio-object. Needed for the 'latest Tuio Object' block.
     var latestTuioObject = null;
 
+    // references the latest tuio-object of a given source.
+    var latestTuioObjectFromSource = {};
+
     // the microseconds until an event expires (e.g. is not used any more)
     var expiringMicroseconds = 50000;
 
@@ -17306,17 +17416,30 @@ module.exports = (function() { 'use strict';
     // set the behavior of what should happen when a certain event occurs: -------------------------------------
 
     var onAddTuioCursor = function(addCursor) {
+        var cursorIDWithSourceTag =
+            encodeIDwithSource(cursorID, addCursor.source);
+
+        // set without source tag
         add[cursorID] = true;
         remove[cursorID] = null;
         tuioObjects[cursorID] = addCursor;
+
+        // set with source tag
+        add[cursorIDWithSourceTag] = true;
+        remove[cursorIDWithSourceTag] = null;
+        tuioObjects[cursorIDWithSourceTag] = addCursor;
     };
 
     var onUpdateTuioCursor = function(updateCursor) {
         tuioObjects[cursorID] = updateCursor;
+        tuioObjects[encodeIDwithSource(cursorID, updateCursor.source)] =
+            updateCursor;
     };
 
     var onRemoveTuioCursor = function(removeCursor) {
         remove[cursorID] = removeCursor;
+        remove[encodeIDwithSource(cursorID, removeCursor.source)] =
+            removeCursor;
     };
 
     var onAddTuioObject = function(addObject) {
@@ -17326,6 +17449,18 @@ module.exports = (function() { 'use strict';
         remove[symID] = null;
         tuioObjects[symID] = addObject;
         latestTuioObject = addObject;
+        latestTuioObjectFromSource[addObject.source] = addObject;
+
+        var symIDwithSourceTag = encodeIDwithSource(symID, addObject.source);
+
+        add[symIDwithSourceTag] = true;
+        remove[symIDwithSourceTag] = null;
+        tuioObjects[symIDwithSourceTag] = addObject;
+        // do not use 'sess' here because the add block is not used combined
+        // with a session id, since the session id
+        // is first generated when object first spotted. Thus, the user
+        // does not need to use the session id in the add block
+
     };
 
     var onUpdateTuioObject = function(updateObject) {
@@ -17335,6 +17470,15 @@ module.exports = (function() { 'use strict';
         tuioObjects[symID] = updateObject;
         tuioObjects[sessID] = updateObject;
         latestTuioObject = updateObject;
+
+        var symIDwithSourceTag =
+            encodeIDwithSource(updateObject.source, symID);
+        var sessIDwithSourceTag =
+            encodeIDwithSource(updateObject.source ,sessID);
+
+        tuioObjects[symIDwithSourceTag] = updateObject;
+        tuioObjects[sessIDwithSourceTag] = updateObject;
+        latestTuioObjectFromSource[updateObject.source] = updateObject;
     };
 
     var onRemoveTuioObject = function(removeObject) {
@@ -17345,6 +17489,16 @@ module.exports = (function() { 'use strict';
         add[symID] = null;
         tuioObjects[symID] = null;
         tuioObjects[sessID] = null;
+
+        var symIDwithSourceTag =
+            encodeIDwithSource(removeObject.source, symID);
+        var sessIDwithSourceTag =
+            encodeIDwithSource(removeObject.source ,sessID);
+
+        remove[symIDwithSourceTag] = removeObject;
+        add[symIDwithSourceTag] = null;
+        tuioObjects[symIDwithSourceTag] = null;
+        tuioObjects[sessIDwithSourceTag] = null;
     };
 
     var onRefresh = function(/*time*/) {
@@ -17363,9 +17517,10 @@ module.exports = (function() { 'use strict';
     // if there is no connection possible, the event based socket.io client assures to reconnect as soon as
     // the server is available
     client.connect();
-    // end client initialisation ---------------------------------------------------------------------------------------
+    // end client initialisation -----------------------------------------------------------------------------------
 
     // define helper functions that work on the input of the blocks ----------------------------------------
+
     var encodeID = function(id, type) {
         switch (type) {
             case 'sess':
@@ -17379,6 +17534,10 @@ module.exports = (function() { 'use strict';
         }
     };
 
+    var encodeIDwithSource = function(id, source) {
+        return source + id;
+    };
+
     // var decodeID = function(id) {
     //     if (id.substr(0, sessionIdPrefix.length) === sessionIdPrefix) {
     //         return id.substr(sessionIdPrefix.length);
@@ -17389,8 +17548,9 @@ module.exports = (function() { 'use strict';
     //     }
     // };
 
-    var reID = new RegExp('(' + cursorID + '|' + latestObjectID + '|' +
-            sessionIdPrefix + '\\d+|' + symbolIdPrefix + '\\d+)');
+    var reID = new RegExp('\\c+ ' + '(' + cursorID + '|' + latestObjectID +
+        '|' + sessionIdPrefix + '\\d+|' + symbolIdPrefix + '\\d+' + ')');
+
     var checkID = function(id) {
         return reID.test(id);
     };
@@ -17409,13 +17569,15 @@ module.exports = (function() { 'use strict';
     // };
 
     // coordinate conversion from tuio to scratch coordinates.
-    // @param: xCoordinate -> the x-coordinate value. It is a number between 0 and 1 (e.g. a procentage rate). 0 means total left, 1 means total right.
+    // @param: xCoordinate -> the x-coordinate value. It is a number
+    // between 0 and 1 (e.g. a procentage rate). 0 means total left, 1 means total right.
     // @result: the x value in scratch coordinates. A value between -240 (total left) and + 240 (total right)
     var convertXToScratchCoordinate = function(xCoordinate) {
         return Math.round(-240.0 + 480.0 * xCoordinate);
     };
     // coordinate conversion from tuio to scratch coordinates.
-    // @param: yCoordinate --> the y-coordinate value. It is a number between 0 and 1 (e.g. a procentage rate). 0 means top, 1 means bottom
+    // @param: yCoordinate --> the y-coordinate value. It is a number between 0 and 1
+    // (e.g. a procentage rate). 0 means top, 1 means bottom
     // @result: the y value in scratch coordinates. A value between +180 (top) and -180 (bottom)
     var convertYToScratchCoordinate = function(yCoordinate) {
         return Math.round(180.0 - 360.0 * yCoordinate);
@@ -17423,10 +17585,12 @@ module.exports = (function() { 'use strict';
 
     // Expose extension interface to module.exports
     return {
-        // begin definition of block behavior ------------------------------------------------------------------------------
+        // begin definition of block behavior ---------------------------------------------------------------------
 
-        // this method defines the behavior of the update-event-hat-block. It is continuously executed by the scratch-flash-app, for every instantiated update-hat-block.
-        // The update-event-block executes is command stack, if and only if the tuio object with the given symbolID is updated within the last 50 ms.
+        // this method defines the behavior of the update-event-hat-block. It is continuously
+        // executed by the scratch-flash-app, for every instantiated update-hat-block.
+        // The update-event-block executes is command stack, if and only if the tuio object
+        // with the given symbolID is updated within the last 50 ms.
         // @param: id --> the symbolID of the object that should be checked for updates.
         updateEventHatBlock: function(id) {
             if (trueUpdateCount[id] > 1) {
@@ -17456,7 +17620,8 @@ module.exports = (function() { 'use strict';
 
         },
 
-        // this method defines the behavior of the add-event-hat-block. It is continuously executed by the scratch-flash-app, for every instantiated add-hat-block.
+        // this method defines the behavior of the add-event-hat-block. It is continuously executed
+        // by the scratch-flash-app, for every instantiated add-hat-block.
         // @param: id --> the symbolID of the object that should be checked for addings.
         addEventHatBlock: function(id) {
             if (checkID(id) === true) {
@@ -17471,7 +17636,8 @@ module.exports = (function() { 'use strict';
             }
         },
 
-        // this method defines the behavior of the remove-event-hat-block. It is continuously executed by the scratch-flash-app, for every instantiated remove-hat-block.
+        // this method defines the behavior of the remove-event-hat-block. It is continuously
+        // executed by the scratch-flash-app, for every instantiated remove-hat-block.
         // @param: id --> the symbolID of the object that should be checked for removals.
         removeEventHatBlock: function(id) {
             var current = remove[id];
@@ -17489,8 +17655,8 @@ module.exports = (function() { 'use strict';
             return encodeID(id, 'sym');
         },
 
-        // this method defines the behavior of the tuioObject SessionID block. It encodes the the typed in integer value by returning
-        // -id. This way, the blocks can distinguish between sessionID and SymboldID
+        // this method defines the behavior of the tuioObject SessionID block. It encodes the the typed
+        // in integer value by returning -id. This way, the blocks can distinguish between sessionID and SymboldID
         // @param: id --> the typed in integer value in the block
         tuioObjectSessionID: function(id) {
             return encodeID(id, 'sess');
@@ -17501,9 +17667,21 @@ module.exports = (function() { 'use strict';
             return cursorID;
         },
 
-        // this method defines the behavior of the 'latest tuio object' block. It returns the symbolID of the latest changed object.
+        // this method defines the behavior of the 'latest tuio object' block. It returns the
+        // symbolID of the latest changed object.
         getLatestTuioObject: function() {
             return latestObjectID;
+        },
+
+        // this method defines the behavior of the 'latest tuio object from source' block.
+        // It delegates the given source parameter
+        // @param: source --> the typed in source in the block
+        getLatestTuioObjectFromSource: function(source) {
+            return source;
+        },
+
+        tuioSource: function(id, source) {
+            return encodeIDwithSource(id, source);
         },
 
         // the method defines the behavior of the tuio-attribute-block. Returns the value of the
@@ -17517,7 +17695,10 @@ module.exports = (function() { 'use strict';
             if (id == latestObjectID) {
                 current = latestTuioObject;
             } else {
-                current = tuioObjects[id];
+                current = latestTuioObjectFromSource[id];
+                if (typeof current == 'undefined' || current == null) {
+                    current = tuioObjects[id];
+                }
             }
 
             var menus = this.descriptor.menus;
@@ -17560,6 +17741,9 @@ module.exports = (function() { 'use strict';
                         } else {
                             return id;
                         }
+                        break;
+                    case menus.objectAttributes[12]:
+                        return current.source;
                 }
             } else {
                 return 'ERROR: No object with id ' + id + ' recognized!';
@@ -17577,8 +17761,12 @@ module.exports = (function() { 'use strict';
             if (id == latestObjectID) {
                 current = latestTuioObject;
             } else {
-                current = tuioObjects[id];
+                current = latestTuioObjectFromSource[id];
+                if (typeof current == 'undefined' || current == null) {
+                    current = tuioObjects[id];
+                }
             }
+
             if (typeof current != 'undefined' && current != null) {
                 var menus = this.descriptor.menus;
                 var currentStatus = current.getTuioState();
@@ -17631,6 +17819,35 @@ module.exports = (function() { 'use strict';
             return value;
         },
 
+        // this method defines the behavior of the 'updateOnAnyFromSource' hat block. The hat block executes its command stack, if and only if
+        // there was an update on any tuio object of the given source within the last 50 ms
+        updateOnAnyObjectFromSource: function(source) {
+            var id = latestObjectID + source;
+            if (trueUpdateCount[id] > 1) {
+                trueUpdateCount[id] = 0;
+                return false;
+            }
+            var current = latestTuioObjectFromSource[source];
+            if (typeof current == 'undefined' || current == null) {
+                return false;
+            }
+            // compare the times of the received Update with the current time
+            var sessionTime = Tuio.Time.getSessionTime();
+            var currentTime = current.getTuioTime();
+            var timeDiff = sessionTime.subtractTime(currentTime);
+            var value = (timeDiff.getSeconds() === 0 &&
+                    timeDiff.getMicroseconds() <= expiringMicroseconds);
+            if (value) {
+                // this mechanism is necessary due to the fact that hat blocks only fire when an up flank is received.
+                // This mechanism creates this flank
+                if (trueUpdateCount[id]) {
+                    trueUpdateCount[id]++;
+                } else {
+                    trueUpdateCount[id] = 1;
+                }
+            }
+            return value;
+        },
         // end block behavior definitions ----------------------------------------------------------------------------------
 
         // defined the shutdown behavior of the extension
@@ -17976,6 +18193,7 @@ module.exports = (function(root) { 'use strict';
         yPos: null,
         currentTime: null,
         startTime: null,
+        source: null,
 
         initialize: function(params) {
             this.xPos = params.xp || 0;
@@ -17983,6 +18201,7 @@ module.exports = (function(root) { 'use strict';
             this.currentTime = Tuio.Time.fromTime(params.ttime ||
                     Tuio.Time.getSessionTime());
             this.startTime = Tuio.Time.fromTime(this.currentTime);
+            this.source = params.source;
         },
 
         update: function(params) {
@@ -18375,22 +18594,24 @@ module.exports = (function(root) { 'use strict';
         freeCursorList: null,
         maxCursorId: null,
         currentFrame: null,
+        sourcesList: null,
         currentTime: null,
 
         initialize: function(params) {
             this.host = params.host;
             this.connected = false;
-            this.objectList = {};
-            this.aliveObjectList = [];
+            this.objectList = []; // stores sid
+            this.aliveObjectList = []; // stores sid
             this.newObjectList = [];
-            this.cursorList = {};
-            this.aliveCursorList = [];
+            this.cursorList = []; // stores sid
+            this.aliveCursorList = []; // stores sid
             this.newCursorList = [];
             this.frameObjects = [];
             this.frameCursors = [];
             this.freeCursorList = [];
             this.maxCursorId = -1;
-            this.currentFrame = 0;
+            this.sourcesList = [];
+            this.currentFrame = [];
             this.currentTime = null;
 
             _.bindAll(this, 'onConnect', 'acceptBundle', 'onDisconnect');
@@ -18427,20 +18648,20 @@ module.exports = (function(root) { 'use strict';
             return this.connected;
         },
         // get all TUIO-Objects, TUIO-Cursor etc.
-        getTuioObjects: function() {
-            return _.clone(this.objectList);
+        getTuioObjects: function(source) {
+            return _.clone(this.objectList[source]);
         },
 
-        getTuioCursors: function() {
-            return _.clone(this.cursorList);
+        getTuioCursors: function(source) {
+            return _.clone(this.cursorList[source]);
         },
         // get an object with certain SessionID
-        getTuioObject: function(sid) {
-            return this.objectList[sid];
+        getTuioObject: function(sid, source) {
+            return this.objectList[source][sid];
         },
         // get an cursor with certain SessionID
-        getTuioCursor: function(sid) {
-            return this.cursorList[sid];
+        getTuioCursor: function(sid, source) {
+            return this.cursorList[source][sid];
         },
 
         // decompose the TUIO-Bundel
@@ -18454,13 +18675,23 @@ module.exports = (function(root) { 'use strict';
 
             var packets = bundle.packets;
 
+            var source = this.getSource(packets);
+            if (this.sourcesList.indexOf(source) < 0) {
+                this.sourcesList.push(source);
+                this.currentFrame[source] = 0;
+                this.objectList[source] = {};
+                this.cursorList[source] = {};
+                this.aliveCursorList[source] = {};
+                this.aliveObjectList[source] = {};
+            }
+
             for (var i = 0, max = packets.length; i < max; i++) {
                 var packet = packets[i];
                 switch (packet.address) {
                     // only these profiles are currently possible
                     case '/tuio/2Dobj':
                     case '/tuio/2Dcur':
-                        this.acceptMessage(packet);
+                        this.acceptMessage(packet,source);
                         break;
                     // blobs not yet implemented.
                     case '/tuio/2Dblb':
@@ -18471,53 +18702,62 @@ module.exports = (function(root) { 'use strict';
 
         },
 
-        acceptMessage: function(oscMessage) {
+        getSource: function(packets) {
+            for (var i = packets.length - 1; i >= 0; i--) {
+                if (packets[i].args[0].toLowerCase() == 'source') {
+                    return packets[i].args[1];
+                }
+            }
+            return '#noSourceTag#';
+        },
+
+        acceptMessage: function(oscMessage, source) {
             var address = oscMessage.address;
             var command = oscMessage.args[0];
             var args = oscMessage.args.slice(1, oscMessage.length);
             // distinguish between TUIO-Objects and TUIO-Cursors
             switch (address) {
                 case '/tuio/2Dobj':
-                    this.handleObjectMessage(command, args);
+                    this.handleObjectMessage(command, args, source);
                     break;
                 case '/tuio/2Dcur':
-                    this.handleCursorMessage(command, args);
+                    this.handleCursorMessage(command, args, source);
                     break;
             }
         },
 
-        handleObjectMessage: function(command, args) {
+        handleObjectMessage: function(command, args, source) {
             // distinguish between the message types
-            switch (command) {
+            switch (command.toLowerCase()) {
                 case 'set':
-                    this.objectSet(args);
+                    this.objectSet(args, source);
                     break;
                 case 'alive':
-                    this.objectAlive(args);
+                    this.objectAlive(args, source);
                     break;
                 case 'fseq':
-                    this.objectFseq(args);
+                    this.objectFseq(args, source);
                     break;
             }
         },
 
-        handleCursorMessage: function(command, args) {
+        handleCursorMessage: function(command, args, source) {
             // distinguish between the message types
             switch (command) {
                 case 'set':
-                    this.cursorSet(args);
+                    this.cursorSet(args, source);
                     break;
                 case 'alive':
-                    this.cursorAlive(args);
+                    this.cursorAlive(args, source);
                     break;
                 case 'fseq':
-                    this.cursorFseq(args);
+                    this.cursorFseq(args, source);
                     break;
             }
         },
 
         // updates the values of a TUIO-Object
-        objectSet: function(args) {
+        objectSet: function(args, source) {
             var sid = args[0];
             var cid = args[1];
             var xPos = args[2];
@@ -18529,17 +18769,18 @@ module.exports = (function(root) { 'use strict';
             var mAccel = args[8];
             var rAccel = args[9];
 
-            if (!_.has(this.objectList, sid)) {
+            if (!_.has(this.objectList[source], sid)) {
                 var addObject = new Tuio.Object({
                     si: sid,
                     sym: cid,
                     xp: xPos,
                     yp: yPos,
-                    a: angle
+                    a: angle,
+                    source: source
                 });
                 this.frameObjects.push(addObject);
             } else {
-                var tobj = this.objectList[sid];
+                var tobj = this.objectList[source][sid];
                 if (!tobj) {
                     return;
                 }
@@ -18558,7 +18799,8 @@ module.exports = (function(root) { 'use strict';
                         sym: cid,
                         xp: xPos,
                         yp: yPos,
-                        a: angle
+                        a: angle,
+                        source: source
                     });
                     updateObject.update({
                         xp: xPos,
@@ -18576,16 +18818,16 @@ module.exports = (function(root) { 'use strict';
         },
 
         // check which TUIO-Objects are alive and update the list of living objects
-        objectAlive: function(args) {
+        objectAlive: function(args, source) {
             var removeObject = null;
             this.newObjectList = args;
-            this.aliveObjectList = _.difference(
-                    this.aliveObjectList,
+            this.aliveObjectList[source] = _.difference(
+                    this.aliveObjectList[source],
                     this.newObjectList
                 );
 
-            for (var i = 0, max = this.aliveObjectList.length; i < max; i++) {
-                removeObject = this.objectList[this.aliveObjectList[i]];
+            for (var i = 0, max = this.aliveObjectList[source].length; i < max; i++) {
+                removeObject = this.objectList[source][this.aliveObjectList[source][i]];
                 if (removeObject) {
                     removeObject.remove(this.currentTime);
                     this.frameObjects.push(removeObject);
@@ -18593,19 +18835,20 @@ module.exports = (function(root) { 'use strict';
             }
         },
 
-        // check if the bundle was too late. If not, trigger events to eventlistener (e.g. the ExtensionObject in this case)
-        objectFseq: function(args) {
+        // check if the bundle was too late. If not, trigger events
+        // to eventlistener (e.g. the ExtensionObject in this case)
+        objectFseq: function(args, source) {
             var fseq = args[0];
             var lateFrame = false;
             var tobj = null;
-
+            //var frame = this.currentFrame[source];
             if (fseq > 0) {
-                if (fseq > this.currentFrame) {
+                if (fseq > this.currentFrame[source]) {
                     this.currentTime = Tuio.Time.getSessionTime();
                 }
-                if ((fseq >= this.currentFrame) ||
-                        ((this.currentFrame - fseq) > 100)) {
-                    this.currentFrame = fseq;
+                if ((fseq >= this.currentFrame[source]) ||
+                        ((this.currentFrame[source] - fseq) > 100)) {
+                    this.currentFrame[source] = fseq;
                 } else {
                     lateFrame = true;
                 }
@@ -18623,7 +18866,7 @@ module.exports = (function(root) { 'use strict';
                             this.objectRemoved(tobj);
                             break;
                         case Tuio.Object.TUIO_ADDED:
-                            this.objectAdded(tobj);
+                            this.objectAdded(tobj, source);
                             break;
                         default:
                             this.objectDefault(tobj);
@@ -18633,8 +18876,8 @@ module.exports = (function(root) { 'use strict';
 
                 this.trigger('refresh', Tuio.Time.fromTime(this.currentTime));
 
-                var buffer = this.aliveObjectList;
-                this.aliveObjectList = this.newObjectList;
+                var buffer = this.aliveObjectList[source];
+                this.aliveObjectList[source] = this.newObjectList;
                 this.newObjectList = buffer;
             }
 
@@ -18645,25 +18888,26 @@ module.exports = (function(root) { 'use strict';
             var removeObject = tobj;
             removeObject.remove(this.currentTime);
             this.trigger('removeTuioObject', removeObject);
-            delete this.objectList[removeObject.getSessionId()];
+            delete this.objectList[removeObject.source][removeObject.getSessionId()];
         },
         //trigger add events to eventlistener (e.g. the ExtensionObject in this case)
-        objectAdded: function(tobj) {
+        objectAdded: function(tobj, source) {
             var addObject = new Tuio.Object({
                 ttime: this.currentTime,
                 si: tobj.getSessionId(),
                 sym: tobj.getSymbolId(),
                 xp: tobj.getX(),
                 yp: tobj.getY(),
-                a: tobj.getAngle()
+                a: tobj.getAngle(),
+                source: source
             });
-            this.objectList[addObject.getSessionId()] = addObject;
+            this.objectList[source][addObject.getSessionId()] = addObject;
             this.trigger('addTuioObject', addObject);
         },
         //trigger update events to eventlistener (e.g. the ExtensionObject in this case)
         // but only if the TUIO-Object really changed its state
         objectDefault: function(tobj) {
-            var updateObject = this.objectList[tobj.getSessionId()];
+            var updateObject = this.objectList[tobj.source][tobj.getSessionId()];
             if ((tobj.getX() !== updateObject.getX() &&
                         tobj.getXSpeed() === 0) ||
                     (tobj.getY() !== updateObject.getY() &&
@@ -18691,7 +18935,7 @@ module.exports = (function(root) { 'use strict';
             this.trigger('updateTuioObject', updateObject);
         },
         // update the values of a cursor. check if add event occured
-        cursorSet: function(args) {
+        cursorSet: function(args, source) {
             var sid = args[0];
             var xPos = args[1];
             var yPos = args[2];
@@ -18699,16 +18943,17 @@ module.exports = (function(root) { 'use strict';
             var ySpeed = args[4];
             var mAccel = args[5];
             // check if add event occured
-            if (!_.has(this.cursorList, sid)) {
+            if (!_.has(this.cursorList[source], sid)) {
                 var addCursor = new Tuio.Cursor({
                     si: sid,
                     ci: -1,
                     xp: xPos,
-                    yp: yPos
+                    yp: yPos,
+                    source: source
                 });
                 this.frameCursors.push(addCursor);
             } else {
-                var tcur = this.cursorList[sid];
+                var tcur = this.cursorList[source][sid];
                 if (!tcur) {
                     return;
                 }
@@ -18723,7 +18968,8 @@ module.exports = (function(root) { 'use strict';
                         si: sid,
                         ci: tcur.getCursorId(),
                         xp: xPos,
-                        yp: yPos
+                        yp: yPos,
+                        source: source
                     });
                     updateCursor.update({
                         xp: xPos,
@@ -18737,35 +18983,36 @@ module.exports = (function(root) { 'use strict';
             }
         },
         // check which cursors are still alive.
-        cursorAlive: function(args) {
+        cursorAlive: function(args, source) {
             var removeCursor = null;
             this.newCursorList = args;
             // compute living cursors
-            this.aliveCursorList = _.difference(this.aliveCursorList,
+            this.aliveCursorList[source] = _.difference(this.aliveCursorList[source],
                     this.newCursorList);
 
-            for (var i = 0, max = this.aliveCursorList.length; i < max; i++) {
+            for (var i = 0, max = this.aliveCursorList[source].length; i < max; i++) {
                 // determine remove events
-                removeCursor = this.cursorList[this.aliveCursorList[i]];
+                removeCursor = this.cursorList[source][this.aliveCursorList[source][i]];
                 if (removeCursor) {
                     removeCursor.remove(this.currentTime);
                     this.frameCursors.push(removeCursor);
                 }
             }
         },
-        // check currency of bundle. If it was not too late, trigger event to eventlistener (e.g. ScratchExtension Objekt)
-        cursorFseq: function(args) {
+        // check currency of bundle. If it was not too late, trigger event
+        // to eventlistener (e.g. ScratchExtension Objekt)
+        cursorFseq: function(args, source) {
             var fseq = args[0];
             var lateFrame = false;
             var tcur = null;
             // check with the frequence id whether the package is current or not
             if (fseq > 0) {
-                if (fseq > this.currentFrame) {
+                if (fseq > this.currentFrame[source]) {
                     this.currentTime = Tuio.Time.getSessionTime();
                 }
-                if ((fseq >= this.currentFrame) ||
-                        ((this.currentFrame - fseq) > 100)) {
-                    this.currentFrame = fseq;
+                if ((fseq >= this.currentFrame[source]) ||
+                        ((this.currentFrame[source] - fseq) > 100)) {
+                    this.currentFrame[source] = fseq;
                 } else {
                     lateFrame = true;
                 }
@@ -18784,7 +19031,7 @@ module.exports = (function(root) { 'use strict';
                             this.cursorRemoved(tcur);
                             break;
                         case Tuio.Cursor.TUIO_ADDED:
-                            this.cursorAdded(tcur);
+                            this.cursorAdded(tcur, source);
                             break;
                         default:
                             this.cursorDefault(tcur);
@@ -18794,8 +19041,8 @@ module.exports = (function(root) { 'use strict';
 
                 this.trigger('refresh', Tuio.Time.fromTime(this.currentTime));
 
-                var buffer = this.aliveCursorList;
-                this.aliveCursorList = this.newCursorList;
+                var buffer = this.aliveCursorList[source];
+                this.aliveCursorList[source] = this.newCursorList;
                 this.newCursorList = buffer;
             }
 
@@ -18805,15 +19052,16 @@ module.exports = (function(root) { 'use strict';
         cursorRemoved: function(tcur) {
             var removeCursor = tcur;
             removeCursor.remove(this.currentTime);
+            var currentSource = tcur.source;
 
             this.trigger('removeTuioCursor', removeCursor);
 
-            delete this.cursorList[removeCursor.getSessionId()];
+            delete this.cursorList[currentSource][removeCursor.getSessionId()];
 
             if (removeCursor.getCursorId() === this.maxCursorId) {
                 this.maxCursorId = -1;
-                if (_.size(this.cursorList) > 0) {
-                    var maxCursor = _.max(this.cursorList, function(cur) {
+                if (_.size(this.cursorList[currentSource]) > 0) {
+                    var maxCursor = _.max(this.cursorList[currentSource], function(cur) {
                         return cur.getCursorId();
                     });
                     if (maxCursor.getCursorId() > this.maxCursorId) {
@@ -18833,8 +19081,8 @@ module.exports = (function(root) { 'use strict';
             }
         },
         // trigger add event for cursor to eventlistener (e.g. ScratchExtension Objekt)
-        cursorAdded: function(tcur) {
-            var cid = _.size(this.cursorList);
+        cursorAdded: function(tcur, _source) {
+            var cid = _.size(this.cursorList[_source]);
             var testCursor = null;
 
             if ((cid <= this.maxCursorId) && (this.freeCursorList.length > 0)) {
@@ -18861,15 +19109,17 @@ module.exports = (function(root) { 'use strict';
                 si: tcur.getSessionId(),
                 ci: cid,
                 xp: tcur.getX(),
-                yp: tcur.getY()
+                yp: tcur.getY(),
+                source: _source
             });
-            this.cursorList[addCursor.getSessionId()] = addCursor;
+            this.cursorList[_source][addCursor.getSessionId()] = addCursor;
 
             this.trigger('addTuioCursor', addCursor);
         },
         // trigger update event for cursor to eventlistener (e.g. ScratchExtension Objekt)
         cursorDefault: function(tcur) {
-            var updateCursor = this.cursorList[tcur.getSessionId()];
+            var updateCursor =
+                this.cursorList[tcur.source][tcur.getSessionId()];
             // check if there were status changes
             if ((tcur.getX() !== updateCursor.getX() &&
                         tcur.getXSpeed() === 0) ||
