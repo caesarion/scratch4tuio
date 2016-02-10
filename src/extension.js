@@ -171,7 +171,7 @@ module.exports = (function() { 'use strict';
     //     }
     // };
 
-    var reID = new RegExp('\\c+ ' + '(' + cursorID + '|' + latestObjectID +
+    var reID = new RegExp('(' + cursorID + '|' + latestObjectID +
         '|' + sessionIdPrefix + '\\d+|' + symbolIdPrefix + '\\d+' + ')');
 
     var checkID = function(id) {
