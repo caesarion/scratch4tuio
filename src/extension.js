@@ -158,7 +158,7 @@ module.exports = (function() { 'use strict';
     };
 
     var encodeIDwithSource = function(id, source) {
-        return source + id;
+        return source + ':' + id;
     };
 
     // var decodeID = function(id) {
@@ -171,8 +171,8 @@ module.exports = (function() { 'use strict';
     //     }
     // };
 
-    var reID = new RegExp('(' + cursorID + '|' + latestObjectID +
-        '|' + sessionIdPrefix + '\\d+|' + symbolIdPrefix + '\\d+' + ')');
+    var reID = new RegExp('^(.+:)?(' + cursorID + '|' + latestObjectID +
+        '|' + sessionIdPrefix + '\\d+|' + symbolIdPrefix + '\\d+' + ')$');
 
     var checkID = function(id) {
         return reID.test(id);
