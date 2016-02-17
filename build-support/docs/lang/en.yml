@@ -1,0 +1,21 @@
+---
+code:                 en
+name:                 English
+
+site:                 
+    title:            Scratch4TUIO
+
+menu:
+    getting_started:  Getting Started
+    about:            About
+    contact:          Contact
+    languages:        Languages
+
+content:
+    header:           Scratch4TUIO
+    lead:             A Scratch exension for tangible user interfaces.
+    start:            Ausprobieren
+    scratch_required: Scratch4TUIO requires Flash
+    getting_started:  Getting Started
+    about:            About
+    contact:          Contact

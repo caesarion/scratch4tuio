@@ -171,7 +171,7 @@ module.exports = function(grunt) {
     grunt.registerTask('sbx', ['sbx-create', 'compress:sbx', 'sbx-clean']);
 
     grunt.registerTask('scratchx', 'Clone or checkout ScratchX for testing.', function() {
-        if (grunt.file.exists('./node_modules/scratchx') ) {
+        if (grunt.file.exists('./node_modules/scratchx')) {
             // grunt.log.ok('scratchx found, updating branch');
             // grunt.task.run('gitpull');
             grunt.log.ok('scratchx found, to pull the latest version run grunt gitpull:scratchx');
@@ -179,6 +179,43 @@ module.exports = function(grunt) {
             grunt.log.ok('scratchx not found, cloning from github');
             grunt.task.run('gitclone');
         }
+    });
+
+    grunt.registerTask('docs', 'Generate the docs for different languages.', function() {
+        // Read main template
+        var template = grunt.file.read('./build-support/docs/index.html');
+
+        // Read config from json files
+        var langs = {};
+        var codes = [];
+        var files = grunt.file.expand({cwd: './build-support/docs/lang'}, '*.yml');
+        for (var i = 0; i < files.length; i++) {
+            var yml = grunt.file.readYAML('./build-support/docs/lang/' + files[i]);
+            langs[files[i]] = yml;
+            codes[yml.code] = yml.name;
+        }
+
+        // Generate info/*.html files
+        for (var file in langs) {
+            var l = langs[file];
+
+            l.site.langs = codes;
+            l.site.baseurl = '.';
+
+            var content = grunt.template.process(template, {data: l});
+            grunt.file.write('./info/' + l.code + '.html', content);
+            grunt.log.write('  ' + l.code + '.html');
+        }
+
+        // Generate main index.html file
+        var defaultLang = langs['de.yml']; // TODO: Make an option ..
+        defaultLang.site.langs = codes;
+        defaultLang.site.baseurl = 'info';
+
+        grunt.file.write('./index.html',
+            grunt.template.process(template, {data: defaultLang})
+        );
+        grunt.log.write('  index.html');
     });
 
     grunt.registerTask('dist', ['jshint', 'jscs', 'browserify', 'uglify', 'sbx']);
