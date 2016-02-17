@@ -9,7 +9,7 @@
     <title>Scratch4TUIO</title>
 
     <link href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.5/yeti/bootstrap.min.css" rel="stylesheet" integrity="sha256-gJ9rCvTS5xodBImuaUYf1WfbdDKq54HCPz9wk8spvGs= sha512-weqt+X3kGDDAW9V32W7bWc6aSNCMGNQsdOpfJJz/qD/Yhp+kNeR+YyvvWojJ+afETB31L0C4eO0pcygxfTgjgw==" crossorigin="anonymous">
-    <link href="css/style.css" rel="stylesheet">
+    <link href="./css/style.css" rel="stylesheet">
 
     <!--[if lt IE 9]>
       <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
@@ -22,16 +22,22 @@
         <div class="header clearfix">
             <nav>
                 <ul class="nav nav-pills pull-right">
+                    <li role="presentation"><a href="#getting_started">Getting Started</a></li>
                     <li role="presentation"><a href="#about">About</a></li>
                     <li role="presentation"><a href="#contact">Contact</a></li>
                     <li role="presentation" class="dropdown">
                         <a class="dropdown-toggle" data-toggle="dropdown"
                             href="#" role="button"
-                            aria-haspopup="true" aria-expanded="false">Lang <span class="caret"></span>
+                            aria-haspopup="true" aria-expanded="false">
+                                <span class="glyphicon glyphicon-globe"></span>
+                                <span class="sr-only">Languages</span>
+                                <span class="caret"></span>
                         </a>
                         <ul class="dropdown-menu">
-                            <li><a href="en.html"><img src="images/flags/gb.gif"> English</a></li>
-                            <li><a href="de.html"><img src="images/flags/de.gif"> Deutsch</a></li>
+                            
+                            <li><a href="./de.html"><img src="./images/flags/de.gif"> Deutsch</a></li>
+                            <li><a href="./en.html"><img src="./images/flags/en.gif"> English</a></li>
+
                         </ul>
                       </li>
                 </ul>
@@ -40,21 +46,28 @@
         </div>
 
         <div class="jumbotron">
-            <img src="images/S4T.png" width="128">
+            <img src="./images/S4T.png" width="128">
             <h1>Scratch4TUIO</h1>
-            <p class="lead">A Scratch exension for tangible user interfaces.
-            <p><a href="http://scratchx.org/?url=http://caesarion.github.io/scratch4tuio/scratch4tuio.min.js&lang=de#scratch"
-                class="btn btn-lg btn-success" role="button">Try it <span class="glyphicon glyphicon-play"></span></a></p>
+            <p class="lead">A Scratch exension for tangible user interfaces.</p>
+            <p><a class="btn btn-lg btn-success" href="http://scratchx.org/?url=http://caesarion.github.io/scratch4tuio/scratch4tuio.min.js&lang=de#scratch" role="button">Ausprobieren <span class="glyphicon glyphicon-play"></span></a></p>
             <small>* Scratch4TUIO requires Flash</small>
         </div>
 
         <div class="row marketing">
             <div class="col-sm-12">
+                <h2 id="getting_started">Getting Started</h2>
+                
+
                 <h2 id="about">About</h2>
                 <p></p>
 
                 <h2 id="contact">Contact</h2>
-                <p></p>
+                <p>
+                    <ul>
+                        <li>Sebastian Thiele</li>
+                        <li>Jonas Neugebauer (<a href="https://twitter.com/jneug">@jneug</a>)</li>
+                    </ul>
+                </p>
             </div>
         </div>
     </div>
