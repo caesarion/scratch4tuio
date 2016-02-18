@@ -56,18 +56,30 @@
         <div class="row marketing">
             <div class="col-sm-12">
                 <h2 id="getting_started">Getting Started</h2>
-                
+                <p>To use Scratch4TUIO three components are required&colon; ScratchX with the Scratch4TUIO extension running, a TUIO sender and the TUIO-Dispatcher, which forwards TUIO messages from the sender to the Scratch extension.</p>
+<h3>ScratchX + Extension</h3> <p>To run ScratchX a browser with intalled <a href="https://get.adobe.com/flashplayer/?loc=en">Flash-Player</a> is required. We suggest you use <a href="https://chrome.google.de">Google Chrome</a> since it comes with its own frequently updated implementation of Flash, which makes the installation of Adobes version unnecessary. (<em>Note: There seems to be a problem with the current version of Chrome and the Scratch browser extension, which is required for some extensions to work (not Scratch4TUIO!). In that case you will need to use a different browser (Firefox) and Adobes Flash version.</em>)</p>
+<p>To run the extension just use the link at the top of this page. Alternatively open  <a href="http://scratchx.org">ScratchX</a> and choose "Open extension url". Copy the Scratch4TUIO extension url into the field and click "Open":</p>
+<pre>http://caesarion.github.io/scratch4tuio/scratch4tuio.min.js</pre>
+<h3>TUIO-Dispatcher</h3> <p>The <a href="https://github.com/caesarion/scratch4tuio-server/releases/latest">TUIO-Dispatcher</a> is a Java application, that forwards any TUIo message it reveices to the Scratch4TUIO extension running in the browser. After you downloaded the tool it can be run from the command line:</p>
+<pre>java -jar scratch4tuio-dispatcher.jar</pre>
+<p>As soon as the dispatcher started, the status ligth in ScratchX should change from yellow to green.</p>
+<p>Further information is available in the <a href="https://github.com/caesarion/scratch4tuio-server">Readme</a>.</p>
+<h3>TUIO client</h3> <p>The last component is a TUIO client, that generates TUIo messages and sends them to the dispatcher. An overview of clients can be found on the <a href="http://www.tuio.org/?software">TUIO page under &quot;Software&quot;</a>.</p>
+<p>For doing your first tests with Scratch4TUIO, the TUIO simulator is a good choice. A simple to use but very powerful client to work with tangible interactions is <a href="http://reactivision.sourceforge.net">reacTIVision</a>.</p>
+
 
                 <h2 id="about">About</h2>
-                <p></p>
+                <p>Scratch4TUIO was developed by Sebastian Thiele as part of his final paper to become a teacher of computer science and mathmatics. This Scratch extension is completely open source and published under the <a href="https://github.com/caesarion/scratch4tuio/LICENSE">GPLv2</a>.</p>
+
 
                 <h2 id="contact">Contact</h2>
-                <p>
-                    <ul>
-                        <li>Sebastian Thiele</li>
-                        <li>Jonas Neugebauer (<a href="https://twitter.com/jneug">@jneug</a>)</li>
-                    </ul>
-                </p>
+                <p>For questions or comments contact</p>
+
+                <ul>
+                    <li>Sebastian Thiele</li>
+                    <li>Jonas Neugebauer (<a href="https://twitter.com/jneug">@jneug</a>)</li>
+                </ul>
+
             </div>
         </div>
     </div>

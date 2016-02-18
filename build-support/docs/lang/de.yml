@@ -28,7 +28,7 @@ content:
         href="https://chrome.google.de">Google Chrome</a>, da dieser mit einer eigenen Flash
         Version geliefert wird, die die Installation der oft von Sicherheitslücken geplagten
         Version von Adobe unnötig macht. (<em>Hinweis: Da es derzeit ein Problem mit der Scratch
-        Brwowser Erweiterung in Chrome zu geben scheint, die für die Nutzung z.B. der
+        Browser Erweiterung in Chrome zu geben scheint, die für die Nutzung z.B. der
         <a href="http://khanning.github.io/scratch-arduino-extension/">Arduino Erweiterung</a>
         nötig ist, muss für diesen Verwendungszweck z.B. Firefox mit der Flash-Version von Adobe
         verwendet werden.</em>)</p>
@@ -61,8 +61,12 @@ content:
 
         <p>Für die ersten Tests ist der Java TUIO Simulator weiter unten auf der Seite gut geeignet.
         Ein einfaches aber mächtiges Werkzeug, um mit be-greifbaren Interaktionen zu arbeiten, ist
-        <a href="http://reactivision.sourceforge.net">reacTIVision</a>.
+        <a href="http://reactivision.sourceforge.net">reacTIVision</a>.</p>
     about:                Über
-    about_text:           Scratch4TUIO wurde von Sebastian Thiele als Teil seiner Examensarbeit entwickelt. Die Scratch Erweiterung ist komplett Open-Source und steht unter der <a href="">GPLv2</a> zur freien Nutzung bereit.
+    about_text: >
+        <p>Scratch4TUIO wurde von Sebastian Thiele als Teil seiner Examensarbeit entwickelt. Die
+        Scratch Erweiterung ist komplett Open-Source und steht unter der <a
+        href="https://github.com/caesarion/scratch4tuio/LICENSE">GPLv2</a> zur freien Nutzung bereit.</p>
     contact:              Kontakt
-    contact_text:         Bei Fragen oder Anregungen wenden Sie sich an
+    contact_text: >
+        <p>Bei Fragen oder Anregungen wenden Sie sich an</p>
