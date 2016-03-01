@@ -17318,9 +17318,9 @@ module.exports={
                 ["r", "TUIO-Object with Symbol ID %n", "tuioObject", ""],
                 ["r", "TUIO-Object with Session ID %n", "tuioObjectSessionID", ""],
                 ["r", "TUIO-Cursor", "tuioCursor", ""],
+                ["--"],
                 ["r", "%m.objectAttributes of %s", "getTuioAttribute", "Position X", ""],
                 ["r", "%s from source %s?", "tuioSource", "", ""],
-                ["--"],
                 ["b", "%s is %m.objectStates ?", "getStateOfTuioObject", "", "moving"]
             ],
             "menus": {
@@ -17342,13 +17342,13 @@ module.exports={
                 ["r", "TUIO-Objekt mit der Symbolnummer %n", "tuioObject", ""],
                 ["r", "TUIO-Objekt mit der Sitzungsnummer %n", "tuioObjectSessionID", ""],
                 ["r", "TUIO-Zeiger", "tuioCursor", ""],
+                ["--"],
                 ["r", "%m.objectAttributes von %s", "getTuioAttribute", "Position X", ""],
                 ["r", "%s der Quelle %s?", "tuioSource", "", ""],
-                ["--"],
                 ["b", "%s ist %m.objectStates ?", "getStateOfTuioObject", "", "in Bewegung"]
             ],
             "menus": {
-                "objectAttributes": ["Position X", "Position Y", "Winkel", "Bewegungsgeschwindigkeit", "Bewegungsbeschleunigung", "Drehgeschwindigkeit", "Drehbeschleunigung", "xGeschwindigkeit", "yGeschwindigkeit", "Symbolnummer", "Sitzungsnummer", "Scratchnummer"],
+                "objectAttributes": ["Position X", "Position Y", "Winkel", "Bewegungsgeschwindigkeit", "Bewegungsbeschleunigung", "Drehgeschwindigkeit", "Drehbeschleunigung", "xGeschwindigkeit", "yGeschwindigkeit", "Symbolnummer", "Sitzungsnummer", "Scratchnummer", "TUIO-Quelle"],
                 "objectStates": ["in Bewegung", "am Beschleunigen", "am Bremsen", "am Drehen"]
             },
             "url": "http://caesarion.github.io/scratch4tuio/info/de.html"
