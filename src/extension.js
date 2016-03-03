@@ -1,6 +1,77 @@
 var Tuio = require('./tuio.js');
 
 module.exports = (function() { 'use strict';
+
+    // set specific ID's -------------------------------------------------------------------------------------------
+    var cursorID = 'cursor';
+    var latestObjectID = 'latest';
+    var symbolIdPrefix = 'symbol:';
+    var sessionIdPrefix = 'session:';
+
+    // define helper functions that work on the input of the blocks ----------------------------------------
+    var encodeID = function(id, type) {
+        switch (type) {
+            case 'sess':
+            case 'session':
+                return sessionIdPrefix + id;
+            case 'sym':
+            case 'symbol':
+                return symbolIdPrefix + id;
+            default:
+                return -1;
+        }
+    };
+
+    var encodeIDwithSource = function(id, source) {
+        return source + ':' + id;
+    };
+
+    // var decodeID = function(id) {
+    //     if (id.substr(0, sessionIdPrefix.length) === sessionIdPrefix) {
+    //         return id.substr(sessionIdPrefix.length);
+    //     } else if (id.substr(0, symbolIdPrefix.length) === symbolIdPrefix) {
+    //         return id.substr(symbolIdPrefix.length);
+    //     } else {
+    //         return -1;
+    //     }
+    // };
+
+    var reID = new RegExp('^(.+:)?(' + cursorID + '|' + latestObjectID +
+        '|' + sessionIdPrefix + '\\d+|' + symbolIdPrefix + '\\d+' + ')$');
+
+    var checkID = function(id) {
+        return reID.test(id);
+    };
+
+    var checkSymID = function(id) {
+        return ((id == cursorID || (id > 0 && id < 88)) &&
+                (!isNaN(id) && (function(x) {
+            return (x | 0) === x;
+        })(parseFloat(id))));
+    };
+
+    // var reScID = new RegExp('(' + cursorID + '|' + latestObjectID + '|' +
+    //         sessionIdPrefix + '\\d+|' + symbolIdPrefix + '\\d+)');
+    // var checkScratchID = function(id) {
+    //     return reScID.test(id);
+    // };
+
+    // coordinate conversion from tuio to scratch coordinates.
+    // @param: xCoordinate -> the x-coordinate value. It is a number
+    // between 0 and 1 (e.g. a procentage rate). 0 means total left, 1 means total right.
+    // @result: the x value in scratch coordinates. A value between -240 (total left) and + 240 (total right)
+    var convertXToScratchCoordinate = function(xCoordinate) {
+        return Math.round(-240.0 + 480.0 * xCoordinate);
+    };
+    // coordinate conversion from tuio to scratch coordinates.
+    // @param: yCoordinate --> the y-coordinate value. It is a number between 0 and 1
+    // (e.g. a procentage rate). 0 means top, 1 means bottom
+    // @result: the y value in scratch coordinates. A value between +180 (top) and -180 (bottom)
+    var convertYToScratchCoordinate = function(yCoordinate) {
+        return Math.round(180.0 - 360.0 * yCoordinate);
+    };
+    // end helper functions ----------------------------------------
+
     // initialize tuio client ------------------------------------------------------------------------------------------
 
     // list of all tuio tuio objects that were updated, added or removed
@@ -10,12 +81,6 @@ module.exports = (function() { 'use strict';
     // the counters are used to return false after the update-hat-block returned true two times.
     // Necessary for the continous execution of the update-hat-block's program stack.
     var trueUpdateCount = {};
-
-    // set specific ID's -------------------------------------------------------------------------------------------
-    var cursorID = 'cursor';
-    var latestObjectID = 'latest';
-    var symbolIdPrefix = 'symbol:';
-    var sessionIdPrefix = 'session:';
 
     // list of boolean values that denote whether an object with a certain symbol-id was removed
     var remove = {};
@@ -142,70 +207,6 @@ module.exports = (function() { 'use strict';
     client.connect();
     // end client initialisation -----------------------------------------------------------------------------------
 
-    // define helper functions that work on the input of the blocks ----------------------------------------
-
-    var encodeID = function(id, type) {
-        switch (type) {
-            case 'sess':
-            case 'session':
-                return sessionIdPrefix + id;
-            case 'sym':
-            case 'symbol':
-                return symbolIdPrefix + id;
-            default:
-                return -1;
-        }
-    };
-
-    var encodeIDwithSource = function(id, source) {
-        return source + ':' + id;
-    };
-
-    // var decodeID = function(id) {
-    //     if (id.substr(0, sessionIdPrefix.length) === sessionIdPrefix) {
-    //         return id.substr(sessionIdPrefix.length);
-    //     } else if (id.substr(0, symbolIdPrefix.length) === symbolIdPrefix) {
-    //         return id.substr(symbolIdPrefix.length);
-    //     } else {
-    //         return -1;
-    //     }
-    // };
-
-    var reID = new RegExp('^(.+:)?(' + cursorID + '|' + latestObjectID +
-        '|' + sessionIdPrefix + '\\d+|' + symbolIdPrefix + '\\d+' + ')$');
-
-    var checkID = function(id) {
-        return reID.test(id);
-    };
-
-    var checkSymID = function(id) {
-        return ((id == cursorID || (id > 0 && id < 88)) &&
-                (!isNaN(id) && (function(x) {
-            return (x | 0) === x;
-        })(parseFloat(id))));
-    };
-
-    // var reScID = new RegExp('(' + cursorID + '|' + latestObjectID + '|' +
-    //         sessionIdPrefix + '\\d+|' + symbolIdPrefix + '\\d+)');
-    // var checkScratchID = function(id) {
-    //     return reScID.test(id);
-    // };
-
-    // coordinate conversion from tuio to scratch coordinates.
-    // @param: xCoordinate -> the x-coordinate value. It is a number
-    // between 0 and 1 (e.g. a procentage rate). 0 means total left, 1 means total right.
-    // @result: the x value in scratch coordinates. A value between -240 (total left) and + 240 (total right)
-    var convertXToScratchCoordinate = function(xCoordinate) {
-        return Math.round(-240.0 + 480.0 * xCoordinate);
-    };
-    // coordinate conversion from tuio to scratch coordinates.
-    // @param: yCoordinate --> the y-coordinate value. It is a number between 0 and 1
-    // (e.g. a procentage rate). 0 means top, 1 means bottom
-    // @result: the y value in scratch coordinates. A value between +180 (top) and -180 (bottom)
-    var convertYToScratchCoordinate = function(yCoordinate) {
-        return Math.round(180.0 - 360.0 * yCoordinate);
-    };
-
     // Expose extension interface to module.exports
     return {
         // begin definition of block behavior ---------------------------------------------------------------------
@@ -249,7 +250,7 @@ module.exports = (function() { 'use strict';
         addEventHatBlock: function(id) {
             if (checkID(id) === true) {
                 if (add[id] === true) {
-                    add[id] = false;
+                    //add[id] = false;
                     return true;
                 } else {
                     return false;
