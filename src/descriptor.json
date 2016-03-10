@@ -19,11 +19,11 @@
                 ["r", "%s from source %s", "tuioSource", "", ""],
                 ["--"],
                 ["r", "%m.objectAttributes of %s", "getTuioAttribute", "Position X", ""],
-                ["b", "%s is %m.objectStates ?", "getStateOfTuioObject", "", "moving"]
+                ["b", "%s is %m.objectStates ?", "getStateOfTuioObject", "", "visible"]
             ],
             "menus": {
                 "objectAttributes": ["Position X", "Position Y", "Angle", "Motion Speed", "Motion Accel", "Rotation Speed", "Rotation Accel", "xSpeed", "ySpeed", "symbolID", "sessionID", "scratchID", "TUIO-source"],
-                "objectStates": ["moving", "accelerating", "decelerating", "rotating"]
+                "objectStates": ["visible", "moving", "accelerating", "decelerating", "rotating"]
             },
             "url": "http://caesarion.github.io/scratch4tuio/info/en.html"
         },
@@ -43,11 +43,11 @@
                 ["r", "%s von Quelle %s", "tuioSource", "", ""],
                 ["--"],
                 ["r", "%m.objectAttributes von %s", "getTuioAttribute", "Position X", ""],
-                ["b", "%s ist %m.objectStates ?", "getStateOfTuioObject", "", "in Bewegung"]
+                ["b", "%s ist %m.objectStates ?", "getStateOfTuioObject", "", "sichtbar"]
             ],
             "menus": {
                 "objectAttributes": ["Position X", "Position Y", "Winkel", "Bewegungsgeschwindigkeit", "Bewegungsbeschleunigung", "Drehgeschwindigkeit", "Drehbeschleunigung", "xGeschwindigkeit", "yGeschwindigkeit", "Symbolnummer", "Sitzungsnummer", "Scratchnummer", "TUIO-Quelle"],
-                "objectStates": ["in Bewegung", "am Beschleunigen", "am Bremsen", "am Drehen"]
+                "objectStates": ["sichtbar", "in Bewegung", "am Beschleunigen", "am Bremsen", "am Drehen"]
             },
             "url": "http://caesarion.github.io/scratch4tuio/info/de.html"
         },

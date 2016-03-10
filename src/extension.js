@@ -374,6 +374,25 @@ module.exports = (function() { 'use strict';
             }
         },
 
+        isTuioVisible: function(id) {
+            var current;
+            // decode the id
+            if (id == latestObjectID) {
+                current = latestTuioObject;
+            } else {
+                current = latestTuioObjectFromSource[id];
+                if (typeof current == 'undefined' || current == null) {
+                    current = tuioObjects[id];
+                }
+            }
+
+            if (typeof current != 'undefined' && current != null) {
+                return true;
+            } else {
+                return false;
+            }
+        },
+
         // the method defines the behavior of the tuio-state block. It returns whether the tuio-object with symboldID 'id' is in the
         // state 'state' or the TUIO-Cursor is in the state 'state'
         // @ param: id --> the returned integer value of the block that is nested in the tuio-attribute-block. Should be a symboldID or
@@ -391,22 +410,27 @@ module.exports = (function() { 'use strict';
                 }
             }
 
+            var menus = this.descriptor.menus;
+
+            // Special case "visible"
+            if (state === menus.objectStates[0]) {
+                return (typeof current != 'undefined' && current != null);
+            }
+
             if (typeof current != 'undefined' && current != null) {
-                var menus = this.descriptor.menus;
                 var currentStatus = current.getTuioState();
                 switch (state) {
-                    // switch between the selecte menu entry and return accordinglys
-                    case menus.objectStates[0]: // case Moving
                     // switch to the selected menu entry and return accordingly
+                    case menus.objectStates[1]: // case Moving
                         return (
                             (currentStatus === Tuio.Object.TUIO_ACCELERATING) ||
                             (currentStatus === Tuio.Object.TUIO_DECELERATING) ||
                             (currentStatus === Tuio.Object.TUIO_ROTATING));
-                    case menus.objectStates[1]: // case Accelerating
+                    case menus.objectStates[2]: // case Accelerating
                         return currentStatus == Tuio.Object.TUIO_ACCELERATING;
-                    case menus.objectStates[2]: // case Decelerating
+                    case menus.objectStates[3]: // case Decelerating
                         return currentStatus == Tuio.Object.TUIO_DECELERATING;
-                    case menus.objectStates[3]: // case Rotating
+                    case menus.objectStates[4]: // case Rotating
                         return currentStatus == Tuio.Object.TUIO_ROTATING;
                 }
             } else {
