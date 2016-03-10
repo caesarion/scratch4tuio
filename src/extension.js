@@ -250,7 +250,7 @@ module.exports = (function() { 'use strict';
         addEventHatBlock: function(id) {
             if (checkID(id) === true) {
                 if (add[id] === true) {
-                    //add[id] = false;
+                    add[id] = false;
                     return true;
                 } else {
                     return false;
@@ -327,7 +327,7 @@ module.exports = (function() { 'use strict';
 
             var menus = this.descriptor.menus;
             if (typeof current != 'undefined' && current != null) {
-                // switch between the selecte menu entry and return accordingly
+                // switch to the selected menu entry and return accordingly
                 switch (attributeName) {
                     case menus.objectAttributes[0]: // Posiion X
                         return convertXToScratchCoordinate(current
@@ -397,6 +397,7 @@ module.exports = (function() { 'use strict';
                 switch (state) {
                     // switch between the selecte menu entry and return accordinglys
                     case menus.objectStates[0]: // case Moving
+                    // switch to the selected menu entry and return accordingly
                         return (
                             (currentStatus === Tuio.Object.TUIO_ACCELERATING) ||
                             (currentStatus === Tuio.Object.TUIO_DECELERATING) ||
